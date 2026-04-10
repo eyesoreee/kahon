@@ -23,4 +23,8 @@ object AppModule {
         KahonDatabase::class.java,
         "kahon_db"
     ).build()
+
+    @Singleton
+    @Provides
+    fun provideLocationDao(db: KahonDatabase) = db.locationDao
 }

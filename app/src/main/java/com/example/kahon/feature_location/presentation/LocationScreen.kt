@@ -1,31 +1,30 @@
-package com.example.kahon.feature_home.presentation
+package com.example.kahon.feature_location.presentation
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.lifecycle.viewmodel.compose.viewModel
 
 @Composable
-fun SpacesRoot(
-    viewModel: HomeViewModel = hiltViewModel()
+fun LocationRoot(
+    viewModel: LocationViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
-    SpacesScreen(
+    LocationScreen(
         uiState = uiState,
         onAction = viewModel::onAction
     )
 }
 
 @Composable
-fun SpacesScreen(
-    uiState: HomeUiState,
-    onAction: (HomeAction) -> Unit,
+fun LocationScreen(
+    uiState: LocationUiState,
+    onAction: (LocationAction) -> Unit,
 ) {
     when (uiState) {
-        is HomeUiState.Loading -> {}
-        is HomeUiState.Ready -> {}
-        is HomeUiState.Error -> {}
+        is LocationUiState.Loading -> {}
+        is LocationUiState.Ready -> {}
+        is LocationUiState.Error -> {}
     }
 }
