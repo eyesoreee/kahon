@@ -1,6 +1,6 @@
-package com.example.kahon.feature_spaces.presentation
+package com.example.kahon.feature_home.presentation
 
-data class SpacesState(
+data class HomeState(
     val paramOne: String = "default",
     val paramTwo: List<String> = emptyList(),
 )

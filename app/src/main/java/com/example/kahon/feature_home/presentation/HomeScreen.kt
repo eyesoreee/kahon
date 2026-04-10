@@ -1,4 +1,4 @@
-package com.example.kahon.feature_spaces.presentation
+package com.example.kahon.feature_home.presentation
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -7,7 +7,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 
 @Composable
 fun SpacesRoot(
-    viewModel: SpacesViewModel = viewModel()
+    viewModel: HomeViewModel = viewModel()
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
@@ -19,12 +19,12 @@ fun SpacesRoot(
 
 @Composable
 fun SpacesScreen(
-    uiState: SpacesUiState,
-    onAction: (SpacesAction) -> Unit,
+    uiState: HomeUiState,
+    onAction: (HomeAction) -> Unit,
 ) {
     when (uiState) {
-        is SpacesUiState.Loading -> {}
-        is SpacesUiState.Ready -> {}
-        is SpacesUiState.Error -> {}
+        is HomeUiState.Loading -> {}
+        is HomeUiState.Ready -> {}
+        is HomeUiState.Error -> {}
     }
 }
