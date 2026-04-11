@@ -54,6 +54,85 @@ class RoomViewModel @Inject constructor(
                     roomRepository.insertRoom(
                         com.example.kahon.feature_room.data.local.Room(name = currentState.newRoomName)
                     )
+                    onAction(RoomAction.OnDismissAddRoomDialog)
+                    loadRooms()
+                }
+            }
+
+            is RoomAction.OnRoomLongClick -> {
+                _uiState.value = (uiState.value as? RoomUiState.Ready)?.let { readyState ->
+                    readyState.copy(
+                        roomState = readyState.roomState.copy(
+                            isRoomOptionsDialogOpen = true,
+                            selectedRoomId = action.id
+                        )
+                    )
+                } ?: uiState.value
+            }
+
+            is RoomAction.OnDismissRoomOptions -> {
+                _uiState.value = (uiState.value as? RoomUiState.Ready)?.let { readyState ->
+                    readyState.copy(
+                        roomState = readyState.roomState.copy(
+                            isRoomOptionsDialogOpen = false,
+                            selectedRoomId = null
+                        )
+                    )
+                } ?: uiState.value
+            }
+
+            is RoomAction.OnEditRoomClick -> {
+                _uiState.value = (uiState.value as? RoomUiState.Ready)?.let { readyState ->
+                    val room = readyState.roomState.rooms.find { it.id == action.id }
+                    readyState.copy(
+                        roomState = readyState.roomState.copy(
+                            isRoomOptionsDialogOpen = false,
+                            isEditRoomDialogOpen = true,
+                            editRoomName = room?.name ?: ""
+                        )
+                    )
+                } ?: uiState.value
+            }
+
+            is RoomAction.OnDeleteRoomClick -> {
+                viewModelScope.launch {
+                    roomRepository.deleteRoom(action.id)
+                    onAction(RoomAction.OnDismissRoomOptions)
+                    loadRooms()
+                }
+            }
+
+            is RoomAction.OnDismissEditRoomDialog -> {
+                _uiState.value = (uiState.value as? RoomUiState.Ready)?.let { readyState ->
+                    readyState.copy(
+                        roomState = readyState.roomState.copy(
+                            isEditRoomDialogOpen = false,
+                            editRoomName = "",
+                            selectedRoomId = null
+                        )
+                    )
+                } ?: uiState.value
+            }
+
+            is RoomAction.OnEditRoomNameChange -> {
+                _uiState.value = (uiState.value as? RoomUiState.Ready)?.let { readyState ->
+                    readyState.copy(roomState = readyState.roomState.copy(editRoomName = action.name))
+                } ?: uiState.value
+            }
+
+            is RoomAction.OnConfirmEditRoom -> {
+                val currentState = (uiState.value as? RoomUiState.Ready)?.roomState ?: return
+                val roomId = currentState.selectedRoomId ?: return
+                if (currentState.editRoomName.isBlank()) return
+
+                viewModelScope.launch {
+                    roomRepository.updateRoom(
+                        com.example.kahon.feature_room.data.local.Room(
+                            id = roomId,
+                            name = currentState.editRoomName
+                        )
+                    )
+                    onAction(RoomAction.OnDismissEditRoomDialog)
                     loadRooms()
                 }
             }

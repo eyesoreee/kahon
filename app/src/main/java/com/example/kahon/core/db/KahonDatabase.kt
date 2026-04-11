@@ -7,7 +7,7 @@ import com.example.kahon.feature_room.data.local.RoomDao
 
 @Database(
     entities = [Room::class],
-    version = 2
+    version = 3
 )
 abstract class KahonDatabase : RoomDatabase() {
     abstract val roomDao: RoomDao

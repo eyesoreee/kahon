@@ -6,4 +6,5 @@ interface RoomRepository {
     suspend fun getRooms(): List<Room>
     suspend fun insertRoom(room: Room)
     suspend fun deleteRoom(id: Long)
+    suspend fun updateRoom(room: Room)
 }

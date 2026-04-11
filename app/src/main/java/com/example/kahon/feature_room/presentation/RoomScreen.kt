@@ -145,6 +145,71 @@ fun RoomScreen(
         )
     }
 
+    if (uiState is RoomUiState.Ready && uiState.roomState.isRoomOptionsDialogOpen) {
+        AlertDialog(
+            onDismissRequest = { onAction(RoomAction.OnDismissRoomOptions) },
+            title = { Text(text = "Room Options") },
+            text = {
+                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    val selectedRoom =
+                        uiState.roomState.rooms.find { it.id == uiState.roomState.selectedRoomId }
+                    Text(text = "What would you like to do with \"${selectedRoom?.name ?: ""}\"?")
+                }
+            },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        uiState.roomState.selectedRoomId?.let {
+                            onAction(RoomAction.OnEditRoomClick(it))
+                        }
+                    }
+                ) {
+                    Text("Edit Name")
+                }
+            },
+            dismissButton = {
+                TextButton(
+                    onClick = {
+                        uiState.roomState.selectedRoomId?.let {
+                            onAction(RoomAction.OnDeleteRoomClick(it))
+                        }
+                    }
+                ) {
+                    Text("Delete", color = MaterialTheme.colorScheme.error)
+                }
+            }
+        )
+    }
+
+    if (uiState is RoomUiState.Ready && uiState.roomState.isEditRoomDialogOpen) {
+        AlertDialog(
+            onDismissRequest = { onAction(RoomAction.OnDismissEditRoomDialog) },
+            title = { Text(text = "Edit Room Name") },
+            text = {
+                OutlinedTextField(
+                    value = uiState.roomState.editRoomName,
+                    onValueChange = { onAction(RoomAction.OnEditRoomNameChange(it)) },
+                    label = { Text("Room Name") },
+                    singleLine = true,
+                    modifier = Modifier.fillMaxWidth()
+                )
+            },
+            confirmButton = {
+                Button(
+                    onClick = { onAction(RoomAction.OnConfirmEditRoom) },
+                    enabled = uiState.roomState.editRoomName.isNotBlank()
+                ) {
+                    Text("Save")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { onAction(RoomAction.OnDismissEditRoomDialog) }) {
+                    Text("Cancel")
+                }
+            }
+        )
+    }
+
     Scaffold(
         modifier = Modifier.fillMaxSize(),
         containerColor = MaterialTheme.colorScheme.background,
@@ -216,7 +281,7 @@ fun RoomScreen(
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
                     Spacer(Modifier.height(12.dp))
-                    
+
                     SearchBar(state = searchBarState, inputField = inputField)
 
                     Spacer(Modifier.height(12.dp))
@@ -267,6 +332,9 @@ fun RoomScreen(
                                     onAction(
                                         RoomAction.OnRoomClick(room.id, room.name)
                                     )
+                                },
+                                onLongClick = {
+                                    onAction(RoomAction.OnRoomLongClick(room.id))
                                 }
                             )
                         }
