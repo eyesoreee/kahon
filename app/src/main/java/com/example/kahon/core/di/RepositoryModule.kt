@@ -1,8 +1,8 @@
 package com.example.kahon.core.di
 
-import com.example.kahon.feature_location.data.local.LocationDao
-import com.example.kahon.feature_location.data.repository.LocationRepositoryImp
-import com.example.kahon.feature_location.domain.repository.LocationRepository
+import com.example.kahon.feature_room.data.local.RoomDao
+import com.example.kahon.feature_room.data.repository.RoomRepositoryImp
+import com.example.kahon.feature_room.domain.repository.RoomRepository
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -14,7 +14,7 @@ import jakarta.inject.Singleton
 object RepositoryModule {
     @Provides
     @Singleton
-    fun provideLocationRepository(locationDao: LocationDao): LocationRepository {
-        return LocationRepositoryImp(locationDao)
+    fun provideRoomRepository(roomDao: RoomDao): RoomRepository {
+        return RoomRepositoryImp(roomDao)
     }
 }

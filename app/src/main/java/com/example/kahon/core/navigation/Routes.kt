@@ -3,12 +3,12 @@ package com.example.kahon.core.navigation
 import kotlinx.serialization.Serializable
 
 @Serializable
-object LocationsRoute
+object RoomsRoute
 
 @Serializable
 data class ContainersRoute(
-    val locationId: String,
-    val locationName: String
+    val roomId: String,
+    val roomName: String
 )
 
 @Serializable

@@ -1,4 +1,4 @@
-package com.example.kahon.feature_location.presentation
+package com.example.kahon.feature_room.presentation
 
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
@@ -29,7 +29,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 
 @Composable
-fun AddLocationCard(
+fun AddRoomCard(
     onClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {

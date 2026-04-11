@@ -1,5 +1,6 @@
-package com.example.kahon.feature_location.presentation
+package com.example.kahon.feature_room.presentation
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -31,7 +32,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 
 @Composable
-fun LocationCard(
+fun RoomCard(
     name: String,
     boxCount: Int,
     palette: CardPalette,
@@ -45,17 +46,18 @@ fun LocationCard(
             .fillMaxWidth()
             .aspectRatio(0.9f),
         shape = RoundedCornerShape(20.dp),
-        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.Transparent)
+        border = BorderStroke(
+            width = 2.dp,
+            brush = Brush.linearGradient(
+                colors = listOf(palette.gradientStart, palette.gradientEnd)
+            )
+        ),
+        elevation = CardDefaults.cardElevation(defaultElevation = 3.dp),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
     ) {
         Box(
             modifier = Modifier
                 .fillMaxSize()
-                .background(
-                    brush = Brush.linearGradient(
-                        colors = listOf(palette.gradientStart, palette.gradientEnd)
-                    )
-                )
                 .padding(16.dp)
         ) {
             Column(
@@ -66,13 +68,13 @@ fun LocationCard(
                     modifier = Modifier
                         .size(48.dp)
                         .clip(RoundedCornerShape(14.dp))
-                        .background(Color.White.copy(alpha = 0.30f)),
+                        .background(palette.gradientStart.copy(alpha = 0.15f)),
                     contentAlignment = Alignment.Center
                 ) {
                     Icon(
                         imageVector = icon,
                         contentDescription = null,
-                        tint = palette.iconTint,
+                        tint = palette.gradientStart,
                         modifier = Modifier.size(26.dp)
                     )
                 }
@@ -83,14 +85,14 @@ fun LocationCard(
                         style = MaterialTheme.typography.titleMedium.copy(
                             fontWeight = FontWeight.Bold,
                         ),
-                        color = palette.textTint,
+                        color = MaterialTheme.colorScheme.onSurface,
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis
                     )
 
                     Surface(
                         shape = RoundedCornerShape(50),
-                        color = Color.White.copy(alpha = 0.35f),
+                        color = palette.gradientStart.copy(alpha = 0.1f),
                     ) {
                         Row(
                             verticalAlignment = Alignment.CenterVertically,
@@ -101,12 +103,13 @@ fun LocationCard(
                                 imageVector = Icons.Outlined.Storage,
                                 contentDescription = null,
                                 modifier = Modifier.size(12.dp),
-                                tint = palette.iconTint
+                                tint = palette.gradientStart
                             )
                             Text(
                                 text = "$boxCount boxes",
                                 style = MaterialTheme.typography.labelSmall,
-                                color = palette.textTint
+                                color = palette.gradientStart,
+                                fontWeight = FontWeight.Medium
                             )
                         }
                     }

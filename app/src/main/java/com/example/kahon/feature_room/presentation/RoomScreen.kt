@@ -1,4 +1,4 @@
-package com.example.kahon.feature_location.presentation
+package com.example.kahon.feature_room.presentation
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -25,15 +25,19 @@ import androidx.compose.material.icons.outlined.Kitchen
 import androidx.compose.material.icons.outlined.Settings
 import androidx.compose.material.icons.outlined.Storage
 import androidx.compose.material.icons.outlined.Weekend
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SearchBar
 import androidx.compose.material3.SearchBarDefaults
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.rememberSearchBarState
@@ -78,20 +82,20 @@ private val roomIcons: List<ImageVector> = listOf(
 )
 
 @Composable
-fun LocationRoot(
-    viewModel: LocationViewModel = hiltViewModel(),
+fun RoomRoot(
+    viewModel: RoomViewModel = hiltViewModel(),
     onNavigateToContainers: (String, String) -> Unit
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
-    LocationScreen(uiState = uiState, onAction = viewModel::onAction)
+    RoomScreen(uiState = uiState, onAction = viewModel::onAction)
 }
 
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun LocationScreen(
-    uiState: LocationUiState,
-    onAction: (LocationAction) -> Unit,
+fun RoomScreen(
+    uiState: RoomUiState,
+    onAction: (RoomAction) -> Unit,
 ) {
     val searchBarState = rememberSearchBarState()
     val textFieldState = rememberTextFieldState()
@@ -109,6 +113,35 @@ fun LocationScreen(
                     color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)
                 )
             },
+        )
+    }
+
+    if (uiState is RoomUiState.Ready && uiState.roomState.isAddRoomDialogOpen) {
+        AlertDialog(
+            onDismissRequest = { onAction(RoomAction.OnDismissAddRoomDialog) },
+            title = { Text(text = "Add New Room") },
+            text = {
+                OutlinedTextField(
+                    value = uiState.roomState.newRoomName,
+                    onValueChange = { onAction(RoomAction.OnNewRoomNameChange(it)) },
+                    label = { Text("Room Name") },
+                    singleLine = true,
+                    modifier = Modifier.fillMaxWidth()
+                )
+            },
+            confirmButton = {
+                Button(
+                    onClick = { onAction(RoomAction.OnConfirmAddRoom) },
+                    enabled = uiState.roomState.newRoomName.isNotBlank()
+                ) {
+                    Text("Add")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { onAction(RoomAction.OnDismissAddRoomDialog) }) {
+                    Text("Cancel")
+                }
+            }
         )
     }
 
@@ -162,19 +195,19 @@ fun LocationScreen(
         }
     ) { innerPadding ->
         when (uiState) {
-            is LocationUiState.Loading -> {
+            is RoomUiState.Loading -> {
                 Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                     CircularProgressIndicator()
                 }
             }
 
-            is LocationUiState.Error -> {
+            is RoomUiState.Error -> {
                 Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                     Text(text = uiState.errorMessage ?: "An unknown error occurred")
                 }
             }
 
-            is LocationUiState.Ready -> {
+            is RoomUiState.Ready -> {
                 Column(
                     modifier = Modifier
                         .fillMaxSize()
@@ -182,9 +215,11 @@ fun LocationScreen(
                         .padding(horizontal = 20.dp),
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
+                    Spacer(Modifier.height(12.dp))
+                    
                     SearchBar(state = searchBarState, inputField = inputField)
 
-                    Spacer(Modifier.height(28.dp))
+                    Spacer(Modifier.height(12.dp))
 
                     Row(
                         modifier = Modifier.fillMaxWidth(),
@@ -196,7 +231,6 @@ fun LocationScreen(
                                 text = "Your Rooms",
                                 style = MaterialTheme.typography.titleLarge.copy(
                                     fontWeight = FontWeight.ExtraBold,
-                                    letterSpacing = (-0.5).sp
                                 ),
                             )
                         }
@@ -206,7 +240,7 @@ fun LocationScreen(
                             color = MaterialTheme.colorScheme.primaryContainer,
                         ) {
                             Text(
-                                text = "${uiState.locationState.locations.size} rooms",
+                                text = "${uiState.roomState.rooms.size} rooms",
                                 style = MaterialTheme.typography.labelMedium,
                                 color = MaterialTheme.colorScheme.onPrimaryContainer,
                                 modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp)
@@ -222,24 +256,24 @@ fun LocationScreen(
                         verticalArrangement = Arrangement.spacedBy(14.dp),
                         modifier = Modifier.fillMaxWidth()
                     ) {
-                        items(uiState.locationState.locations) { location ->
-                            val index = uiState.locationState.locations.indexOf(location)
-                            LocationCard(
-                                name = location.name,
+                        items(uiState.roomState.rooms) { room ->
+                            val index = uiState.roomState.rooms.indexOf(room)
+                            RoomCard(
+                                name = room.name,
                                 boxCount = 0,
                                 palette = cardPalettes[index % cardPalettes.size],
                                 icon = roomIcons[index % roomIcons.size],
                                 onClick = {
                                     onAction(
-                                        LocationAction.OnLocationClick(location.id, location.name)
+                                        RoomAction.OnRoomClick(room.id, room.name)
                                     )
                                 }
                             )
                         }
 
                         item {
-                            AddLocationCard(
-                                onClick = { onAction(LocationAction.OnAddLocationClick) }
+                            AddRoomCard(
+                                onClick = { onAction(RoomAction.OnAddRoomClick) }
                             )
                         }
                     }

@@ -26,5 +26,5 @@ object AppModule {
 
     @Singleton
     @Provides
-    fun provideLocationDao(db: KahonDatabase) = db.locationDao
+    fun provideRoomDao(db: KahonDatabase) = db.roomDao
 }
