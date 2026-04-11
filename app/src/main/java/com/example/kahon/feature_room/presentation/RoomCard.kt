@@ -1,8 +1,8 @@
 package com.example.kahon.feature_room.presentation
 
 import androidx.compose.foundation.BorderStroke
-import androidx.compose.foundation.background
 import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.background
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -27,7 +27,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
@@ -37,7 +36,7 @@ import androidx.compose.ui.unit.dp
 @Composable
 fun RoomCard(
     name: String,
-    boxCount: Int,
+    storageCount: Int,
     palette: CardPalette,
     icon: ImageVector,
     onClick: () -> Unit,
@@ -114,7 +113,7 @@ fun RoomCard(
                                 tint = palette.gradientStart
                             )
                             Text(
-                                text = "$boxCount boxes",
+                                text = "$storageCount boxes",
                                 style = MaterialTheme.typography.labelSmall,
                                 color = palette.gradientStart,
                                 fontWeight = FontWeight.Medium

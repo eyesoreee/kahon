@@ -8,7 +8,7 @@ import javax.inject.Inject
 class RoomRepositoryImp @Inject constructor(
     private val roomDao: RoomDao
 ) : RoomRepository {
-    override suspend fun getRooms() = roomDao.getRooms()
+    override suspend fun getRooms() = roomDao.getRoomsWithCount()
     override suspend fun insertRoom(room: Room) = roomDao.insertRoom(room)
     override suspend fun deleteRoom(id: Long) = roomDao.deleteRoom(id)
     override suspend fun updateRoom(room: Room) = roomDao.updateRoom(room)

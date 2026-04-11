@@ -95,6 +95,14 @@ class RoomViewModel @Inject constructor(
             }
 
             is RoomAction.OnDeleteRoomClick -> {
+                val currentState = (uiState.value as? RoomUiState.Ready)?.roomState ?: return
+                val room = currentState.rooms.find { it.id == action.id }
+
+                if (room != null && room.storageCount > 0) {
+                    onAction(RoomAction.OnDismissRoomOptions)
+                    return
+                }
+
                 viewModelScope.launch {
                     roomRepository.deleteRoom(action.id)
                     onAction(RoomAction.OnDismissRoomOptions)

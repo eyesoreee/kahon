@@ -325,7 +325,7 @@ fun RoomScreen(
                             val index = uiState.roomState.rooms.indexOf(room)
                             RoomCard(
                                 name = room.name,
-                                boxCount = 0,
+                                storageCount = room.storageCount,
                                 palette = cardPalettes[index % cardPalettes.size],
                                 icon = roomIcons[index % roomIcons.size],
                                 onClick = {

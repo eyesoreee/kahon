@@ -1,9 +1,9 @@
 package com.example.kahon.feature_room.presentation
 
-import com.example.kahon.feature_room.data.local.Room
+import com.example.kahon.feature_room.domain.model.RoomWithCount
 
 data class RoomState(
-    val rooms: List<Room> = emptyList(),
+    val rooms: List<RoomWithCount> = emptyList(),
     val searchQuery: String = "",
     val isAddRoomDialogOpen: Boolean = false,
     val newRoomName: String = "",
