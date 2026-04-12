@@ -2,14 +2,21 @@ package com.example.kahon.core.db
 
 import androidx.room.Database
 import androidx.room.RoomDatabase
+import com.example.kahon.feature_items.data.local.Item
 import com.example.kahon.feature_room.data.local.Room
 import com.example.kahon.feature_room.data.local.RoomDao
 import com.example.kahon.feature_storage.data.local.Storage
+import com.example.kahon.feature_storage.data.local.StorageDao
 
 @Database(
-    entities = [Room::class, Storage::class],
-    version = 4
+    entities = [
+        Room::class,
+        Storage::class,
+        Item::class
+    ],
+    version = 5
 )
 abstract class KahonDatabase : RoomDatabase() {
     abstract val roomDao: RoomDao
+    abstract val storageDao: StorageDao
 }
