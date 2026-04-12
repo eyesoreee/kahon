@@ -39,7 +39,7 @@ class RoomViewModel @Inject constructor(
         }
     }
 
-    fun loadRooms() {
+    private fun loadRooms() {
         _uiState.value = RoomUiState.Loading
         viewModelScope.launch {
             try {

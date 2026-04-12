@@ -1,4 +1,4 @@
-package com.example.kahon.feature_items.data.local
+package com.example.kahon.feature_item.data.local
 
 import androidx.room.ColumnInfo
 import androidx.room.Entity

@@ -22,7 +22,7 @@ object AppModule {
         app,
         KahonDatabase::class.java,
         "kahon_db"
-    ).fallbackToDestructiveMigration(false).build()
+    ).build()
 
     @Singleton
     @Provides
