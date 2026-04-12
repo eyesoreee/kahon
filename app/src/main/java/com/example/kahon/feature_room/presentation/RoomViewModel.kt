@@ -2,6 +2,7 @@ package com.example.kahon.feature_room.presentation
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.kahon.feature_room.data.local.Room
 import com.example.kahon.feature_room.domain.repository.RoomRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -23,129 +24,18 @@ class RoomViewModel @Inject constructor(
 
     fun onAction(action: RoomAction) {
         when (action) {
-            is RoomAction.OnAddRoomClick -> {
-                _uiState.value = (uiState.value as? RoomUiState.Ready)?.let { readyState ->
-                    readyState.copy(roomState = readyState.roomState.copy(isAddRoomDialogOpen = true))
-                } ?: uiState.value
-            }
-
-            is RoomAction.OnDismissAddRoomDialog -> {
-                _uiState.value = (uiState.value as? RoomUiState.Ready)?.let { readyState ->
-                    readyState.copy(
-                        roomState = readyState.roomState.copy(
-                            isAddRoomDialogOpen = false,
-                            newRoomName = ""
-                        )
-                    )
-                } ?: uiState.value
-            }
-
-            is RoomAction.OnNewRoomNameChange -> {
-                _uiState.value = (uiState.value as? RoomUiState.Ready)?.let { readyState ->
-                    readyState.copy(roomState = readyState.roomState.copy(newRoomName = action.name))
-                } ?: uiState.value
-            }
-
-            is RoomAction.OnConfirmAddRoom -> {
-                val currentState = (uiState.value as? RoomUiState.Ready)?.roomState ?: return
-                if (currentState.newRoomName.isBlank()) return
-
-                viewModelScope.launch {
-                    roomRepository.insertRoom(
-                        com.example.kahon.feature_room.data.local.Room(name = currentState.newRoomName)
-                    )
-                    onAction(RoomAction.OnDismissAddRoomDialog)
-                    loadRooms()
-                }
-            }
-
-            is RoomAction.OnRoomLongClick -> {
-                _uiState.value = (uiState.value as? RoomUiState.Ready)?.let { readyState ->
-                    readyState.copy(
-                        roomState = readyState.roomState.copy(
-                            isRoomOptionsDialogOpen = true,
-                            selectedRoomId = action.id
-                        )
-                    )
-                } ?: uiState.value
-            }
-
-            is RoomAction.OnDismissRoomOptions -> {
-                _uiState.value = (uiState.value as? RoomUiState.Ready)?.let { readyState ->
-                    readyState.copy(
-                        roomState = readyState.roomState.copy(
-                            isRoomOptionsDialogOpen = false,
-                            selectedRoomId = null
-                        )
-                    )
-                } ?: uiState.value
-            }
-
-            is RoomAction.OnEditRoomClick -> {
-                _uiState.value = (uiState.value as? RoomUiState.Ready)?.let { readyState ->
-                    val room = readyState.roomState.rooms.find { it.id == action.id }
-                    readyState.copy(
-                        roomState = readyState.roomState.copy(
-                            isRoomOptionsDialogOpen = false,
-                            isEditRoomDialogOpen = true,
-                            editRoomName = room?.name ?: ""
-                        )
-                    )
-                } ?: uiState.value
-            }
-
-            is RoomAction.OnDeleteRoomClick -> {
-                val currentState = (uiState.value as? RoomUiState.Ready)?.roomState ?: return
-                val room = currentState.rooms.find { it.id == action.id }
-
-                if (room != null && room.storageCount > 0) {
-                    onAction(RoomAction.OnDismissRoomOptions)
-                    return
-                }
-
-                viewModelScope.launch {
-                    roomRepository.deleteRoom(action.id)
-                    onAction(RoomAction.OnDismissRoomOptions)
-                    loadRooms()
-                }
-            }
-
-            is RoomAction.OnDismissEditRoomDialog -> {
-                _uiState.value = (uiState.value as? RoomUiState.Ready)?.let { readyState ->
-                    readyState.copy(
-                        roomState = readyState.roomState.copy(
-                            isEditRoomDialogOpen = false,
-                            editRoomName = "",
-                            selectedRoomId = null
-                        )
-                    )
-                } ?: uiState.value
-            }
-
-            is RoomAction.OnEditRoomNameChange -> {
-                _uiState.value = (uiState.value as? RoomUiState.Ready)?.let { readyState ->
-                    readyState.copy(roomState = readyState.roomState.copy(editRoomName = action.name))
-                } ?: uiState.value
-            }
-
-            is RoomAction.OnConfirmEditRoom -> {
-                val currentState = (uiState.value as? RoomUiState.Ready)?.roomState ?: return
-                val roomId = currentState.selectedRoomId ?: return
-                if (currentState.editRoomName.isBlank()) return
-
-                viewModelScope.launch {
-                    roomRepository.updateRoom(
-                        com.example.kahon.feature_room.data.local.Room(
-                            id = roomId,
-                            name = currentState.editRoomName
-                        )
-                    )
-                    onAction(RoomAction.OnDismissEditRoomDialog)
-                    loadRooms()
-                }
-            }
-
-            else -> {}
+            is RoomAction.OnAddRoomClick -> onAddRoomClick()
+            is RoomAction.OnDismissAddRoomDialog -> onDismissAddRoomDialog()
+            is RoomAction.OnNewRoomNameChange -> onNewRoomNameChange(action.name)
+            is RoomAction.OnConfirmAddRoom -> onConfirmAddRoom()
+            is RoomAction.OnRoomLongClick -> onRoomLongClick(action.id)
+            is RoomAction.OnDismissRoomOptions -> onDismissRoomOptions()
+            is RoomAction.OnEditRoomClick -> onEditRoomClick(action.id)
+            is RoomAction.OnDeleteRoomClick -> onDeleteRoomClick(action.id)
+            is RoomAction.OnDismissEditRoomDialog -> onDismissEditRoomDialog()
+            is RoomAction.OnEditRoomNameChange -> onEditRoomNameChange(action.name)
+            is RoomAction.OnConfirmEditRoom -> onConfirmEditRoom()
+            is RoomAction.OnRoomClick -> TODO()
         }
     }
 
@@ -162,6 +52,105 @@ class RoomViewModel @Inject constructor(
             } catch (e: Exception) {
                 _uiState.value = RoomUiState.Error(e.message)
             }
+        }
+    }
+
+    private fun onAddRoomClick() {
+        _uiState.updateWhenReady { it.copy(isAddRoomDialogOpen = true) }
+    }
+
+    private fun onDismissAddRoomDialog() {
+        _uiState.updateWhenReady { it.copy(isAddRoomDialogOpen = false) }
+    }
+
+    private fun onNewRoomNameChange(name: String) {
+        _uiState.updateWhenReady { it.copy(newRoomName = name) }
+    }
+
+    private fun onConfirmAddRoom() {
+        val currentState = (uiState.value as? RoomUiState.Ready)?.roomState ?: return
+        if (currentState.newRoomName.isBlank()) return
+
+        viewModelScope.launch {
+            roomRepository.insertRoom(Room(name = currentState.newRoomName))
+            onAction(RoomAction.OnDismissAddRoomDialog)
+            loadRooms()
+        }
+    }
+
+    private fun onRoomLongClick(id: Long?) {
+        _uiState.updateWhenReady {
+            it.copy(
+                isRoomOptionsDialogOpen = true,
+                selectedRoomId = id
+            )
+        }
+    }
+
+    private fun onDismissRoomOptions() {
+        _uiState.updateWhenReady {
+            it.copy(
+                isRoomOptionsDialogOpen = false,
+                selectedRoomId = null
+            )
+        }
+    }
+
+    private fun onEditRoomClick(id: Long) {
+        _uiState.updateWhenReady { roomState ->
+            val room = roomState.rooms.find { it.id == id }
+            roomState.copy(
+                isRoomOptionsDialogOpen = false,
+                isEditRoomDialogOpen = true,
+                editRoomName = room?.name ?: ""
+            )
+        }
+    }
+
+    private fun onDeleteRoomClick(id: Long) {
+        val currentState = (uiState.value as? RoomUiState.Ready)?.roomState ?: return
+        val room = currentState.rooms.find { it.id == id }
+
+        if (room != null && room.storageCount > 0) {
+            onAction(RoomAction.OnDismissRoomOptions)
+            return
+        }
+
+        viewModelScope.launch {
+            roomRepository.deleteRoom(id)
+            onAction(RoomAction.OnDismissRoomOptions)
+            loadRooms()
+        }
+    }
+
+    private fun onDismissEditRoomDialog() {
+        _uiState.updateWhenReady {
+            it.copy(
+                isEditRoomDialogOpen = false,
+                editRoomName = "",
+                selectedRoomId = null
+            )
+        }
+    }
+
+    private fun onEditRoomNameChange(name: String) {
+        _uiState.updateWhenReady { it.copy(editRoomName = name) }
+    }
+
+    private fun onConfirmEditRoom() {
+        val currentState = (uiState.value as? RoomUiState.Ready)?.roomState ?: return
+        val roomId = currentState.selectedRoomId ?: return
+        if (currentState.editRoomName.isBlank()) return
+
+        viewModelScope.launch {
+            roomRepository.updateRoom(
+                Room(
+                    id = roomId,
+                    name = currentState.editRoomName
+                )
+            )
+            onAction(RoomAction.OnDismissEditRoomDialog)
+            loadRooms()
         }
     }
 }
