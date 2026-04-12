@@ -113,7 +113,7 @@ fun RoomCard(
                                 tint = palette.gradientStart
                             )
                             Text(
-                                text = "$storageCount boxes",
+                                text = "$storageCount storages",
                                 style = MaterialTheme.typography.labelSmall,
                                 color = palette.gradientStart,
                                 fontWeight = FontWeight.Medium

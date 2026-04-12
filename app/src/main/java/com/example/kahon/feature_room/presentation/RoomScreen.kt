@@ -120,7 +120,7 @@ fun RoomScreen(
             placeholder = {
                 Text(
                     modifier = Modifier.clearAndSetSemantics {},
-                    text = "Search rooms or boxes…",
+                    text = "Search rooms or storages…",
                     color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)
                 )
             },

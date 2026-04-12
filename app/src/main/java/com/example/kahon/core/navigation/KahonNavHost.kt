@@ -24,7 +24,9 @@ fun KahonNavHost() {
         }
 
         composable<StorageRoute> {
-            StorageRoot()
+            StorageRoot(
+                onBackClick = { navController.popBackStack() }
+            )
         }
     }
 }

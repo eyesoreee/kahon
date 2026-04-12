@@ -14,7 +14,7 @@ import com.example.kahon.feature_storage.data.local.StorageDao
         Storage::class,
         Item::class
     ],
-    version = 5
+    version = 6
 )
 abstract class KahonDatabase : RoomDatabase() {
     abstract val roomDao: RoomDao
