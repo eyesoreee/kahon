@@ -31,4 +31,8 @@ object AppModule {
     @Singleton
     @Provides
     fun provideStorageDao(db: KahonDatabase) = db.storageDao
+
+    @Singleton
+    @Provides
+    fun provideItemDao(db: KahonDatabase) = db.itemDao
 }

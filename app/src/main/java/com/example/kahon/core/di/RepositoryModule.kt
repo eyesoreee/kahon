@@ -1,5 +1,8 @@
 package com.example.kahon.core.di
 
+import com.example.kahon.feature_item.data.local.ItemDao
+import com.example.kahon.feature_item.data.repository.ItemRepositoryImp
+import com.example.kahon.feature_item.domain.repository.ItemRepository
 import com.example.kahon.feature_room.data.local.RoomDao
 import com.example.kahon.feature_room.data.repository.RoomRepositoryImp
 import com.example.kahon.feature_room.domain.repository.RoomRepository
@@ -25,5 +28,11 @@ object RepositoryModule {
     @Singleton
     fun provideStorageRepository(storageDao: StorageDao): StorageRepository {
         return StorageRepositoryImp(storageDao)
+    }
+
+    @Provides
+    @Singleton
+    fun provideItemRepository(itemDao: ItemDao): ItemRepository {
+        return ItemRepositoryImp(itemDao)
     }
 }
