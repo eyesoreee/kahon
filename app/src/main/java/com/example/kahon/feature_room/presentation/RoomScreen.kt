@@ -18,6 +18,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.input.rememberTextFieldState
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.outlined.Bed
 import androidx.compose.material.icons.outlined.Chair
 import androidx.compose.material.icons.outlined.Checkroom
@@ -25,7 +26,6 @@ import androidx.compose.material.icons.outlined.Kitchen
 import androidx.compose.material.icons.outlined.Settings
 import androidx.compose.material.icons.outlined.Storage
 import androidx.compose.material.icons.outlined.Weekend
-import androidx.compose.material.icons.filled.Add
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
@@ -86,10 +86,19 @@ private val roomIcons: List<ImageVector> = listOf(
 @Composable
 fun RoomRoot(
     viewModel: RoomViewModel = hiltViewModel(),
-    onNavigateToContainers: (String, String) -> Unit
+    onNavigateToStorage: (Long, String) -> Unit
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
-    RoomScreen(uiState = uiState, onAction = viewModel::onAction)
+    RoomScreen(
+        uiState = uiState,
+        onAction = { action ->
+            if (action is RoomAction.OnRoomClick) {
+                onNavigateToStorage(action.id, action.name)
+            } else {
+                viewModel.onAction(action)
+            }
+        }
+    )
 }
 
 
@@ -341,9 +350,9 @@ fun RoomScreen(
                                 palette = cardPalettes[index % cardPalettes.size],
                                 icon = roomIcons[index % roomIcons.size],
                                 onClick = {
-//                                    onAction(
-//                                        RoomAction.OnRoomClick(room.id, room.name)
-//                                    )
+                                    onAction(
+                                        RoomAction.OnRoomClick(room.id, room.name)
+                                    )
                                 },
                                 onLongClick = {
                                     onAction(RoomAction.OnRoomLongClick(room.id))
