@@ -5,6 +5,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.example.kahon.feature_room.presentation.RoomRoot
+import com.example.kahon.feature_storage.presentation.StorageRoot
 
 @Composable
 fun KahonNavHost() {
@@ -12,15 +13,18 @@ fun KahonNavHost() {
 
     NavHost(
         navController = navController,
-        startDestination = RoomsRoute
+        startDestination = RoomRoute
     ) {
-
-        composable<RoomsRoute> {
+        composable<RoomRoute> {
             RoomRoot(
-                onNavigateToContainers = { roomId, roomName ->
-                    navController.navigate(ContainersRoute(roomId, roomName))
+                onNavigateToStorage = { roomId, roomName ->
+                    navController.navigate(StorageRoute(roomId.toString(), roomName))
                 }
             )
+        }
+
+        composable<StorageRoute> {
+            StorageRoot()
         }
     }
 }
