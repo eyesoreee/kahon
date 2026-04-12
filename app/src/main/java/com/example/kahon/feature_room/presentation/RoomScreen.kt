@@ -25,10 +25,12 @@ import androidx.compose.material.icons.outlined.Kitchen
 import androidx.compose.material.icons.outlined.Settings
 import androidx.compose.material.icons.outlined.Storage
 import androidx.compose.material.icons.outlined.Weekend
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
@@ -257,6 +259,16 @@ fun RoomScreen(
                     Spacer(Modifier.width(8.dp))
                 },
             )
+        },
+        floatingActionButton = {
+            FloatingActionButton(
+                onClick = { onAction(RoomAction.OnAddRoomClick) },
+                containerColor = MaterialTheme.colorScheme.primary,
+                contentColor = MaterialTheme.colorScheme.onPrimary,
+                shape = CircleShape
+            ) {
+                Icon(imageVector = Icons.Default.Add, contentDescription = "Add Room")
+            }
         }
     ) { innerPadding ->
         when (uiState) {
@@ -329,9 +341,9 @@ fun RoomScreen(
                                 palette = cardPalettes[index % cardPalettes.size],
                                 icon = roomIcons[index % roomIcons.size],
                                 onClick = {
-                                    onAction(
-                                        RoomAction.OnRoomClick(room.id, room.name)
-                                    )
+//                                    onAction(
+//                                        RoomAction.OnRoomClick(room.id, room.name)
+//                                    )
                                 },
                                 onLongClick = {
                                     onAction(RoomAction.OnRoomLongClick(room.id))
