@@ -24,17 +24,9 @@ class RoomViewModel @Inject constructor(
 
     fun onAction(action: RoomAction) {
         when (action) {
-            is RoomAction.OnAddRoomClick -> onAddRoomClick()
-            is RoomAction.OnDismissAddRoomDialog -> onDismissAddRoomDialog()
-            is RoomAction.OnNewRoomNameChange -> onNewRoomNameChange(action.name)
-            is RoomAction.OnConfirmAddRoom -> onConfirmAddRoom()
-            is RoomAction.OnRoomLongClick -> onRoomLongClick(action.id)
-            is RoomAction.OnDismissRoomOptions -> onDismissRoomOptions()
-            is RoomAction.OnEditRoomClick -> onEditRoomClick(action.id)
-            is RoomAction.OnDeleteRoomClick -> onDeleteRoomClick(action.id)
-            is RoomAction.OnDismissEditRoomDialog -> onDismissEditRoomDialog()
-            is RoomAction.OnEditRoomNameChange -> onEditRoomNameChange(action.name)
-            is RoomAction.OnConfirmEditRoom -> onConfirmEditRoom()
+            is RoomAction.OnConfirmAddRoom -> onConfirmAddRoom(action.name)
+            is RoomAction.OnDeleteRoom -> onDeleteRoom(action.id)
+            is RoomAction.OnConfirmEditRoom -> onConfirmEditRoom(action.id, action.newName)
         }
     }
 
@@ -54,101 +46,32 @@ class RoomViewModel @Inject constructor(
         }
     }
 
-    private fun onAddRoomClick() {
-        _uiState.updateWhenReady { it.copy(isAddRoomDialogOpen = true) }
-    }
-
-    private fun onDismissAddRoomDialog() {
-        _uiState.updateWhenReady { it.copy(isAddRoomDialogOpen = false) }
-    }
-
-    private fun onNewRoomNameChange(name: String) {
-        _uiState.updateWhenReady { it.copy(newRoomName = name) }
-    }
-
-    private fun onConfirmAddRoom() {
-        val currentState = (uiState.value as? RoomUiState.Ready)?.roomState ?: return
-        if (currentState.newRoomName.isBlank()) return
+    private fun onConfirmAddRoom(name: String) {
+        if (name.isBlank()) return
 
         viewModelScope.launch {
-            roomRepository.insertRoom(Room(name = currentState.newRoomName))
-            onAction(RoomAction.OnDismissAddRoomDialog)
+            roomRepository.insertRoom(Room(name = name))
             loadRooms()
         }
     }
 
-    private fun onRoomLongClick(id: Long?) {
-        _uiState.updateWhenReady {
-            it.copy(
-                isRoomOptionsDialogOpen = true,
-                selectedRoomId = id
-            )
-        }
-    }
-
-    private fun onDismissRoomOptions() {
-        _uiState.updateWhenReady {
-            it.copy(
-                isRoomOptionsDialogOpen = false,
-                selectedRoomId = null
-            )
-        }
-    }
-
-    private fun onEditRoomClick(id: Long) {
-        _uiState.updateWhenReady { roomState ->
-            val room = roomState.rooms.find { it.id == id }
-            roomState.copy(
-                isRoomOptionsDialogOpen = false,
-                isEditRoomDialogOpen = true,
-                editRoomName = room?.name ?: ""
-            )
-        }
-    }
-
-    private fun onDeleteRoomClick(id: Long) {
-        val currentState = (uiState.value as? RoomUiState.Ready)?.roomState ?: return
-        val room = currentState.rooms.find { it.id == id }
-
-        if (room != null && room.storageCount > 0) {
-            onAction(RoomAction.OnDismissRoomOptions)
-            return
-        }
-
+    private fun onDeleteRoom(id: Long) {
         viewModelScope.launch {
             roomRepository.deleteRoom(id)
-            onAction(RoomAction.OnDismissRoomOptions)
             loadRooms()
         }
     }
 
-    private fun onDismissEditRoomDialog() {
-        _uiState.updateWhenReady {
-            it.copy(
-                isEditRoomDialogOpen = false,
-                editRoomName = "",
-                selectedRoomId = null
-            )
-        }
-    }
-
-    private fun onEditRoomNameChange(name: String) {
-        _uiState.updateWhenReady { it.copy(editRoomName = name) }
-    }
-
-    private fun onConfirmEditRoom() {
-        val currentState = (uiState.value as? RoomUiState.Ready)?.roomState ?: return
-        val roomId = currentState.selectedRoomId ?: return
-        if (currentState.editRoomName.isBlank()) return
+    private fun onConfirmEditRoom(id: Long, newName: String) {
+        if (newName.isBlank()) return
 
         viewModelScope.launch {
             roomRepository.updateRoom(
                 Room(
-                    id = roomId,
-                    name = currentState.editRoomName
+                    id = id,
+                    name = newName
                 )
             )
-            onAction(RoomAction.OnDismissEditRoomDialog)
             loadRooms()
         }
     }

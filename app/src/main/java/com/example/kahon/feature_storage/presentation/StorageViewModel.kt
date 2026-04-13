@@ -32,17 +32,9 @@ class StorageViewModel @Inject constructor(
 
     fun onAction(action: StorageAction) {
         when (action) {
-            is StorageAction.OnAddStorageClick -> onAddStorageClick()
-            is StorageAction.OnDismissAddStorageDialog -> onDismissAddStorageDialog()
-            is StorageAction.OnNewStorageNameChange -> onNewStorageNameChange(action.name)
-            is StorageAction.OnConfirmAddStorage -> onConfirmAddStorage()
-            is StorageAction.OnStorageLongClick -> onStorageLongClick(action.id)
-            is StorageAction.OnDismissStorageOptions -> onDismissStorageOptions()
-            is StorageAction.OnEditStorageClick -> onEditStorageClick(action.id)
-            is StorageAction.OnDeleteStorageClick -> onDeleteStorageClick(action.id)
-            is StorageAction.OnDismissEditStorageDialog -> onDismissEditStorageDialog()
-            is StorageAction.OnEditStorageNameChange -> onEditStorageNameChange(action.name)
-            is StorageAction.OnConfirmEditStorage -> onConfirmEditStorage()
+            is StorageAction.OnConfirmAddStorage -> onConfirmAddStorage(action.name)
+            is StorageAction.OnDeleteStorage -> onDeleteStorage(action.id)
+            is StorageAction.OnConfirmEditStorage -> onConfirmEditStorage(action.id, action.newName)
         }
     }
 
@@ -62,107 +54,38 @@ class StorageViewModel @Inject constructor(
         }
     }
 
-    private fun onAddStorageClick() {
-        _uiState.updateWhenReady { it.copy(isAddStorageDialogOpen = true) }
-    }
-
-    private fun onDismissAddStorageDialog() {
-        _uiState.updateWhenReady { it.copy(isAddStorageDialogOpen = false, newStorageName = "") }
-    }
-
-    private fun onNewStorageNameChange(name: String) {
-        _uiState.updateWhenReady { it.copy(newStorageName = name) }
-    }
-
-    private fun onConfirmAddStorage() {
-        val currentState = (uiState.value as? StorageUiState.Ready)?.storageState ?: return
-        if (currentState.newStorageName.isBlank()) return
+    private fun onConfirmAddStorage(name: String) {
+        if (name.isBlank()) return
 
         viewModelScope.launch {
             storageRepository.insertStorage(
                 Storage(
-                    name = currentState.newStorageName,
+                    name = name,
                     roomId = roomId
                 )
             )
-            onDismissAddStorageDialog()
             loadStorages()
         }
     }
 
-    private fun onStorageLongClick(id: Long) {
-        _uiState.updateWhenReady {
-            it.copy(
-                isStorageOptionsDialogOpen = true,
-                selectedStorageId = id
-            )
-        }
-    }
-
-    private fun onDismissStorageOptions() {
-        _uiState.updateWhenReady {
-            it.copy(
-                isStorageOptionsDialogOpen = false,
-                selectedStorageId = null
-            )
-        }
-    }
-
-    private fun onEditStorageClick(id: Long) {
-        _uiState.updateWhenReady { storageState ->
-            val storage = storageState.storages.find { it.id == id }
-            storageState.copy(
-                isStorageOptionsDialogOpen = false,
-                isEditStorageDialogOpen = true,
-                editStorageName = storage?.name ?: ""
-            )
-        }
-    }
-
-    private fun onDeleteStorageClick(id: Long) {
-        val currentState = (uiState.value as? StorageUiState.Ready)?.storageState ?: return
-        val storage = currentState.storages.find { it.id == id }
-
-        if (storage != null && storage.itemCount > 0) {
-            onDismissStorageOptions()
-            return
-        }
-
+    private fun onDeleteStorage(id: Long) {
         viewModelScope.launch {
             storageRepository.deleteStorage(id)
-            onDismissStorageOptions()
             loadStorages()
         }
     }
 
-    private fun onDismissEditStorageDialog() {
-        _uiState.updateWhenReady {
-            it.copy(
-                isEditStorageDialogOpen = false,
-                editStorageName = "",
-                selectedStorageId = null
-            )
-        }
-    }
-
-    private fun onEditStorageNameChange(name: String) {
-        _uiState.updateWhenReady { it.copy(editStorageName = name) }
-    }
-
-    private fun onConfirmEditStorage() {
-        val currentState = (uiState.value as? StorageUiState.Ready)?.storageState ?: return
-        val storageId = currentState.selectedStorageId ?: return
-        if (currentState.editStorageName.isBlank()) return
+    private fun onConfirmEditStorage(id: Long, newName: String) {
+        if (newName.isBlank()) return
 
         viewModelScope.launch {
             storageRepository.updateStorage(
                 Storage(
-                    id = storageId,
-                    name = currentState.editStorageName,
+                    id = id,
+                    name = newName,
                     roomId = roomId
                 )
             )
-            onDismissEditStorageDialog()
             loadStorages()
         }
     }

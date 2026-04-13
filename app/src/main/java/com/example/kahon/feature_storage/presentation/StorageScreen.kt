@@ -37,6 +37,9 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -45,6 +48,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.example.kahon.feature_storage.domain.model.StorageWithCount
 
 private val cardPalettes = listOf(
     CardPalette(Color(0xFFFF8C42), Color(0xFFFFBF69), Color(0xFF7A3B1E), Color(0xFF3D1A00)),
@@ -81,14 +85,26 @@ fun StorageScreen(
     onBackClick: () -> Unit,
     onStorageClick: (String, String) -> Unit
 ) {
-    if (uiState is StorageUiState.Ready && uiState.storageState.isAddStorageDialogOpen) {
+    var isAddStorageDialogOpen by remember { mutableStateOf(false) }
+    var newStorageName by remember { mutableStateOf("") }
+
+    var isStorageOptionsDialogOpen by remember { mutableStateOf(false) }
+    var selectedStorage by remember { mutableStateOf<StorageWithCount?>(null) }
+
+    var isEditStorageDialogOpen by remember { mutableStateOf(false) }
+    var editStorageName by remember { mutableStateOf("") }
+
+    if (isAddStorageDialogOpen) {
         AlertDialog(
-            onDismissRequest = { onAction(StorageAction.OnDismissAddStorageDialog) },
+            onDismissRequest = {
+                isAddStorageDialogOpen = false
+                newStorageName = ""
+            },
             title = { Text(text = "Add New Box") },
             text = {
                 OutlinedTextField(
-                    value = uiState.storageState.newStorageName,
-                    onValueChange = { onAction(StorageAction.OnNewStorageNameChange(it)) },
+                    value = newStorageName,
+                    onValueChange = { newStorageName = it },
                     label = { Text("Box Name") },
                     singleLine = true,
                     modifier = Modifier.fillMaxWidth()
@@ -96,35 +112,43 @@ fun StorageScreen(
             },
             confirmButton = {
                 Button(
-                    onClick = { onAction(StorageAction.OnConfirmAddStorage) },
-                    enabled = uiState.storageState.newStorageName.isNotBlank()
+                    onClick = {
+                        onAction(StorageAction.OnConfirmAddStorage(newStorageName))
+                        isAddStorageDialogOpen = false
+                        newStorageName = ""
+                    },
+                    enabled = newStorageName.isNotBlank()
                 ) {
                     Text("Add")
                 }
             },
             dismissButton = {
-                TextButton(onClick = { onAction(StorageAction.OnDismissAddStorageDialog) }) {
+                TextButton(onClick = {
+                    isAddStorageDialogOpen = false
+                    newStorageName = ""
+                }) {
                     Text("Cancel")
                 }
             }
         )
     }
 
-    if (uiState is StorageUiState.Ready && uiState.storageState.isStorageOptionsDialogOpen) {
+    if (isStorageOptionsDialogOpen && selectedStorage != null) {
         AlertDialog(
-            onDismissRequest = { onAction(StorageAction.OnDismissStorageOptions) },
+            onDismissRequest = {
+                isStorageOptionsDialogOpen = false
+                selectedStorage = null
+            },
             title = { Text(text = "Box Options") },
             text = {
-                val selectedStorage =
-                    uiState.storageState.storages.find { it.id == uiState.storageState.selectedStorageId }
-                Text(text = "What would you like to do with \"${selectedStorage?.name ?: ""}\"?")
+                Text(text = "What would you like to do with \"${selectedStorage?.name}\"?")
             },
             confirmButton = {
                 TextButton(
                     onClick = {
-                        uiState.storageState.selectedStorageId?.let {
-                            onAction(StorageAction.OnEditStorageClick(it))
-                        }
+                        editStorageName = selectedStorage?.name ?: ""
+                        isStorageOptionsDialogOpen = false
+                        isEditStorageDialogOpen = true
                     }
                 ) {
                     Text("Edit Name")
@@ -133,9 +157,11 @@ fun StorageScreen(
             dismissButton = {
                 TextButton(
                     onClick = {
-                        uiState.storageState.selectedStorageId?.let {
-                            onAction(StorageAction.OnDeleteStorageClick(it))
+                        selectedStorage?.let {
+                            onAction(StorageAction.OnDeleteStorage(it.id))
                         }
+                        isStorageOptionsDialogOpen = false
+                        selectedStorage = null
                     }
                 ) {
                     Text("Delete", color = MaterialTheme.colorScheme.error)
@@ -144,14 +170,18 @@ fun StorageScreen(
         )
     }
 
-    if (uiState is StorageUiState.Ready && uiState.storageState.isEditStorageDialogOpen) {
+    if (isEditStorageDialogOpen && selectedStorage != null) {
         AlertDialog(
-            onDismissRequest = { onAction(StorageAction.OnDismissEditStorageDialog) },
+            onDismissRequest = {
+                isEditStorageDialogOpen = false
+                editStorageName = ""
+                selectedStorage = null
+            },
             title = { Text(text = "Edit Box Name") },
             text = {
                 OutlinedTextField(
-                    value = uiState.storageState.editStorageName,
-                    onValueChange = { onAction(StorageAction.OnEditStorageNameChange(it)) },
+                    value = editStorageName,
+                    onValueChange = { editStorageName = it },
                     label = { Text("Box Name") },
                     singleLine = true,
                     modifier = Modifier.fillMaxWidth()
@@ -159,14 +189,25 @@ fun StorageScreen(
             },
             confirmButton = {
                 Button(
-                    onClick = { onAction(StorageAction.OnConfirmEditStorage) },
-                    enabled = uiState.storageState.editStorageName.isNotBlank()
+                    onClick = {
+                        selectedStorage?.let {
+                            onAction(StorageAction.OnConfirmEditStorage(it.id, editStorageName))
+                        }
+                        isEditStorageDialogOpen = false
+                        editStorageName = ""
+                        selectedStorage = null
+                    },
+                    enabled = editStorageName.isNotBlank()
                 ) {
                     Text("Save")
                 }
             },
             dismissButton = {
-                TextButton(onClick = { onAction(StorageAction.OnDismissEditStorageDialog) }) {
+                TextButton(onClick = {
+                    isEditStorageDialogOpen = false
+                    editStorageName = ""
+                    selectedStorage = null
+                }) {
                     Text("Cancel")
                 }
             }
@@ -227,7 +268,7 @@ fun StorageScreen(
         },
         floatingActionButton = {
             FloatingActionButton(
-                onClick = { onAction(StorageAction.OnAddStorageClick) },
+                onClick = { isAddStorageDialogOpen = true },
                 containerColor = MaterialTheme.colorScheme.primary,
                 contentColor = MaterialTheme.colorScheme.onPrimary,
                 shape = CircleShape
@@ -297,7 +338,8 @@ fun StorageScreen(
                                 onStorageClick(storage.name, roomName)
                             },
                             onLongClick = {
-                                onAction(StorageAction.OnStorageLongClick(storage.id))
+                                selectedStorage = storage
+                                isStorageOptionsDialogOpen = true
                             }
                         )
                     }

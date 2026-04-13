@@ -45,7 +45,10 @@ import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.rememberSearchBarState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -56,6 +59,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.example.kahon.feature_room.domain.model.RoomWithCount
 import kotlinx.coroutines.launch
 
 private val cardPalettes = listOf(
@@ -108,6 +112,15 @@ fun RoomScreen(
     val textFieldState = rememberTextFieldState()
     val scope = rememberCoroutineScope()
 
+    var isAddRoomDialogOpen by remember { mutableStateOf(false) }
+    var newRoomName by remember { mutableStateOf("") }
+
+    var isRoomOptionsDialogOpen by remember { mutableStateOf(false) }
+    var selectedRoom by remember { mutableStateOf<RoomWithCount?>(null) }
+
+    var isEditRoomDialogOpen by remember { mutableStateOf(false) }
+    var editRoomName by remember { mutableStateOf("") }
+
     val inputField = @Composable {
         SearchBarDefaults.InputField(
             textFieldState = textFieldState,
@@ -123,14 +136,17 @@ fun RoomScreen(
         )
     }
 
-    if (uiState is RoomUiState.Ready && uiState.roomState.isAddRoomDialogOpen) {
+    if (isAddRoomDialogOpen) {
         AlertDialog(
-            onDismissRequest = { onAction(RoomAction.OnDismissAddRoomDialog) },
+            onDismissRequest = {
+                isAddRoomDialogOpen = false
+                newRoomName = ""
+            },
             title = { Text(text = "Add New Room") },
             text = {
                 OutlinedTextField(
-                    value = uiState.roomState.newRoomName,
-                    onValueChange = { onAction(RoomAction.OnNewRoomNameChange(it)) },
+                    value = newRoomName,
+                    onValueChange = { newRoomName = it },
                     label = { Text("Room Name") },
                     singleLine = true,
                     modifier = Modifier.fillMaxWidth()
@@ -138,37 +154,45 @@ fun RoomScreen(
             },
             confirmButton = {
                 Button(
-                    onClick = { onAction(RoomAction.OnConfirmAddRoom) },
-                    enabled = uiState.roomState.newRoomName.isNotBlank()
+                    onClick = {
+                        onAction(RoomAction.OnConfirmAddRoom(newRoomName))
+                        isAddRoomDialogOpen = false
+                        newRoomName = ""
+                    },
+                    enabled = newRoomName.isNotBlank()
                 ) {
                     Text("Add")
                 }
             },
             dismissButton = {
-                TextButton(onClick = { onAction(RoomAction.OnDismissAddRoomDialog) }) {
+                TextButton(onClick = {
+                    isAddRoomDialogOpen = false
+                    newRoomName = ""
+                }) {
                     Text("Cancel")
                 }
             }
         )
     }
 
-    if (uiState is RoomUiState.Ready && uiState.roomState.isRoomOptionsDialogOpen) {
+    if (isRoomOptionsDialogOpen && selectedRoom != null) {
         AlertDialog(
-            onDismissRequest = { onAction(RoomAction.OnDismissRoomOptions) },
+            onDismissRequest = {
+                isRoomOptionsDialogOpen = false
+                selectedRoom = null
+            },
             title = { Text(text = "Room Options") },
             text = {
                 Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    val selectedRoom =
-                        uiState.roomState.rooms.find { it.id == uiState.roomState.selectedRoomId }
-                    Text(text = "What would you like to do with \"${selectedRoom?.name ?: ""}\"?")
+                    Text(text = "What would you like to do with \"${selectedRoom?.name}\"?")
                 }
             },
             confirmButton = {
                 TextButton(
                     onClick = {
-                        uiState.roomState.selectedRoomId?.let {
-                            onAction(RoomAction.OnEditRoomClick(it))
-                        }
+                        editRoomName = selectedRoom?.name ?: ""
+                        isRoomOptionsDialogOpen = false
+                        isEditRoomDialogOpen = true
                     }
                 ) {
                     Text("Edit Name")
@@ -177,9 +201,11 @@ fun RoomScreen(
             dismissButton = {
                 TextButton(
                     onClick = {
-                        uiState.roomState.selectedRoomId?.let {
-                            onAction(RoomAction.OnDeleteRoomClick(it))
+                        selectedRoom?.let {
+                            onAction(RoomAction.OnDeleteRoom(it.id))
                         }
+                        isRoomOptionsDialogOpen = false
+                        selectedRoom = null
                     }
                 ) {
                     Text("Delete", color = MaterialTheme.colorScheme.error)
@@ -188,14 +214,18 @@ fun RoomScreen(
         )
     }
 
-    if (uiState is RoomUiState.Ready && uiState.roomState.isEditRoomDialogOpen) {
+    if (isEditRoomDialogOpen && selectedRoom != null) {
         AlertDialog(
-            onDismissRequest = { onAction(RoomAction.OnDismissEditRoomDialog) },
+            onDismissRequest = {
+                isEditRoomDialogOpen = false
+                editRoomName = ""
+                selectedRoom = null
+            },
             title = { Text(text = "Edit Room Name") },
             text = {
                 OutlinedTextField(
-                    value = uiState.roomState.editRoomName,
-                    onValueChange = { onAction(RoomAction.OnEditRoomNameChange(it)) },
+                    value = editRoomName,
+                    onValueChange = { editRoomName = it },
                     label = { Text("Room Name") },
                     singleLine = true,
                     modifier = Modifier.fillMaxWidth()
@@ -203,14 +233,25 @@ fun RoomScreen(
             },
             confirmButton = {
                 Button(
-                    onClick = { onAction(RoomAction.OnConfirmEditRoom) },
-                    enabled = uiState.roomState.editRoomName.isNotBlank()
+                    onClick = {
+                        selectedRoom?.let {
+                            onAction(RoomAction.OnConfirmEditRoom(it.id, editRoomName))
+                        }
+                        isEditRoomDialogOpen = false
+                        editRoomName = ""
+                        selectedRoom = null
+                    },
+                    enabled = editRoomName.isNotBlank()
                 ) {
                     Text("Save")
                 }
             },
             dismissButton = {
-                TextButton(onClick = { onAction(RoomAction.OnDismissEditRoomDialog) }) {
+                TextButton(onClick = {
+                    isEditRoomDialogOpen = false
+                    editRoomName = ""
+                    selectedRoom = null
+                }) {
                     Text("Cancel")
                 }
             }
@@ -267,7 +308,7 @@ fun RoomScreen(
         },
         floatingActionButton = {
             FloatingActionButton(
-                onClick = { onAction(RoomAction.OnAddRoomClick) },
+                onClick = { isAddRoomDialogOpen = true },
                 containerColor = MaterialTheme.colorScheme.primary,
                 contentColor = MaterialTheme.colorScheme.onPrimary,
                 shape = CircleShape
@@ -349,14 +390,15 @@ fun RoomScreen(
                                     onRoomClick(room.id, room.name)
                                 },
                                 onLongClick = {
-                                    onAction(RoomAction.OnRoomLongClick(room.id))
+                                    selectedRoom = room
+                                    isRoomOptionsDialogOpen = true
                                 }
                             )
                         }
 
                         item {
                             AddRoomCard(
-                                onClick = { onAction(RoomAction.OnAddRoomClick) }
+                                onClick = { isAddRoomDialogOpen = true }
                             )
                         }
                     }
