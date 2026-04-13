@@ -91,13 +91,8 @@ fun RoomRoot(
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     RoomScreen(
         uiState = uiState,
-        onAction = { action ->
-            if (action is RoomAction.OnRoomClick) {
-                onNavigateToStorage(action.id, action.name)
-            } else {
-                viewModel.onAction(action)
-            }
-        }
+        onAction = viewModel::onAction,
+        onRoomClick = onNavigateToStorage
     )
 }
 
@@ -107,6 +102,7 @@ fun RoomRoot(
 fun RoomScreen(
     uiState: RoomUiState,
     onAction: (RoomAction) -> Unit,
+    onRoomClick: (Long, String) -> Unit,
 ) {
     val searchBarState = rememberSearchBarState()
     val textFieldState = rememberTextFieldState()
@@ -350,9 +346,7 @@ fun RoomScreen(
                                 palette = cardPalettes[index % cardPalettes.size],
                                 icon = roomIcons[index % roomIcons.size],
                                 onClick = {
-                                    onAction(
-                                        RoomAction.OnRoomClick(room.id, room.name)
-                                    )
+                                    onRoomClick(room.id, room.name)
                                 },
                                 onLongClick = {
                                     onAction(RoomAction.OnRoomLongClick(room.id))

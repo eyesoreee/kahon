@@ -12,7 +12,7 @@ data class StorageRoute(
 )
 
 @Serializable
-data class ItemsRoute(
+data class ItemRoute(
     val containerId: String,
     val containerName: String
 )

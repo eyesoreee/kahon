@@ -35,7 +35,6 @@ class RoomViewModel @Inject constructor(
             is RoomAction.OnDismissEditRoomDialog -> onDismissEditRoomDialog()
             is RoomAction.OnEditRoomNameChange -> onEditRoomNameChange(action.name)
             is RoomAction.OnConfirmEditRoom -> onConfirmEditRoom()
-            is RoomAction.OnRoomClick -> TODO()
         }
     }
 

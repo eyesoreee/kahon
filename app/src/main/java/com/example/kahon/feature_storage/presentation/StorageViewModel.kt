@@ -43,7 +43,6 @@ class StorageViewModel @Inject constructor(
             is StorageAction.OnDismissEditStorageDialog -> onDismissEditStorageDialog()
             is StorageAction.OnEditStorageNameChange -> onEditStorageNameChange(action.name)
             is StorageAction.OnConfirmEditStorage -> onConfirmEditStorage()
-            is StorageAction.OnStorageClick -> {}
         }
     }
 

@@ -43,7 +43,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 
 private val cardPalettes = listOf(
@@ -58,7 +58,8 @@ private val cardPalettes = listOf(
 @Composable
 fun StorageRoot(
     viewModel: StorageViewModel = hiltViewModel(),
-    onBackClick: () -> Unit
+    onBackClick: () -> Unit,
+    onNavigateToItems: (String, String) -> Unit
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
@@ -66,7 +67,8 @@ fun StorageRoot(
         uiState = uiState,
         roomName = viewModel.roomName,
         onAction = viewModel::onAction,
-        onBackClick = onBackClick
+        onBackClick = onBackClick,
+        onStorageClick = onNavigateToItems
     )
 }
 
@@ -76,7 +78,8 @@ fun StorageScreen(
     uiState: StorageUiState,
     roomName: String,
     onAction: (StorageAction) -> Unit,
-    onBackClick: () -> Unit
+    onBackClick: () -> Unit,
+    onStorageClick: (String, String) -> Unit
 ) {
     if (uiState is StorageUiState.Ready && uiState.storageState.isAddStorageDialogOpen) {
         AlertDialog(
@@ -291,9 +294,7 @@ fun StorageScreen(
                             palette = cardPalettes[index % cardPalettes.size],
                             icon = Icons.Outlined.Inventory2,
                             onClick = {
-                                onAction(
-                                    StorageAction.OnStorageClick(storage.id, storage.name)
-                                )
+                                onStorageClick(storage.name, roomName)
                             },
                             onLongClick = {
                                 onAction(StorageAction.OnStorageLongClick(storage.id))

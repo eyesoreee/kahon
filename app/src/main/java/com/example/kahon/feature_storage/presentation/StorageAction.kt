@@ -1,7 +1,6 @@
 package com.example.kahon.feature_storage.presentation
 
 sealed interface StorageAction {
-    data class OnStorageClick(val id: Long, val name: String) : StorageAction
     data class OnStorageLongClick(val id: Long) : StorageAction
     data object OnAddStorageClick : StorageAction
     data object OnDismissAddStorageDialog : StorageAction
