@@ -24,4 +24,8 @@ class StorageRepositoryImp @Inject constructor(
     override suspend fun updateStorage(storage: Storage) {
         storageDao.updateStorage(storage)
     }
+
+    override suspend fun doesStorageExist(roomName: String, storageName: String): Boolean {
+        return storageDao.doesStorageExist(roomName, storageName)
+    }
 }

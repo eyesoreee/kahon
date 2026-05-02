@@ -3,6 +3,12 @@ package com.example.kahon.core.navigation
 import android.content.Intent
 import android.util.Log
 import androidx.activity.ComponentActivity
+import androidx.compose.animation.core.LinearOutSlowInEasing
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.ui.platform.LocalContext
@@ -37,35 +43,51 @@ fun KahonNavHost() {
         }
     }
 
-    NavHost(
-        navController = navController,
-        startDestination = RoomRoute
+    Surface(
+        color = MaterialTheme.colorScheme.background
     ) {
-        composable<RoomRoute> {
-            RoomRoot(
-                onNavigateToStorage = { roomId, roomName ->
-                    navController.navigate(StorageRoute(roomId.toString(), roomName))
-                }
-            )
-        }
-
-        composable<StorageRoute> {
-            StorageRoot(
-                onBackClick = { navController.popBackStack() },
-                onNavigateToItems = { storageName, roomName ->
-                    navController.navigate(ItemRoute(roomName = roomName, storageName = storageName))
-                }
-            )
-        }
-
-        composable<ItemRoute>(
-            deepLinks = listOf(
-                navDeepLink<ItemRoute>(basePath = "kahon://item")
-            )
+        NavHost(
+            navController = navController,
+            startDestination = RoomRoute,
+            enterTransition = {
+                fadeIn(animationSpec = tween(300, easing = LinearOutSlowInEasing))
+            },
+            exitTransition = {
+                fadeOut(animationSpec = tween(300, easing = LinearOutSlowInEasing))
+            },
+            popEnterTransition = {
+                fadeIn(animationSpec = tween(300, easing = LinearOutSlowInEasing))
+            },
+            popExitTransition = {
+                fadeOut(animationSpec = tween(300, easing = LinearOutSlowInEasing))
+            }
         ) {
-            ItemRoot(
-                onBackClick = { navController.popBackStack() }
-            )
+            composable<RoomRoute> {
+                RoomRoot(
+                    onNavigateToStorage = { roomId, roomName ->
+                        navController.navigate(StorageRoute(roomId.toString(), roomName))
+                    }
+                )
+            }
+
+            composable<StorageRoute> {
+                StorageRoot(
+                    onBackClick = { navController.popBackStack() },
+                    onNavigateToItems = { storageName, roomName ->
+                        navController.navigate(ItemRoute(roomName = roomName, storageName = storageName))
+                    }
+                )
+            }
+
+            composable<ItemRoute>(
+                deepLinks = listOf(
+                    navDeepLink<ItemRoute>(basePath = "kahon://item")
+                )
+            ) {
+                ItemRoot(
+                    onBackClick = { navController.popBackStack() }
+                )
+            }
         }
     }
 }

@@ -29,4 +29,13 @@ interface StorageDao {
 
     @Update
     suspend fun updateStorage(storage: Storage)
+
+    @Query("""
+        SELECT EXISTS(
+            SELECT 1 FROM storage 
+            JOIN room ON storage.roomId = room.id 
+            WHERE storage.name = :storageName AND room.name = :roomName
+        )
+    """)
+    suspend fun doesStorageExist(roomName: String, storageName: String): Boolean
 }

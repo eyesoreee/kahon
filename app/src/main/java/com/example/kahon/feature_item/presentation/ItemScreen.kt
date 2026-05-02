@@ -45,7 +45,11 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.produceState
 import androidx.compose.runtime.remember
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
+import android.graphics.Bitmap
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -166,7 +170,34 @@ fun ItemScreen(
                         .padding(innerPadding),
                     contentAlignment = Alignment.Center
                 ) {
-                    Text(text = uiState.message ?: "An unknown error occurred")
+                    Column(
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        modifier = Modifier.padding(32.dp)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.QrCode,
+                            contentDescription = null,
+                            modifier = Modifier.size(64.dp),
+                            tint = MaterialTheme.colorScheme.error.copy(alpha = 0.6f)
+                        )
+                        Spacer(Modifier.height(16.dp))
+                        Text(
+                            text = uiState.message ?: "An unknown error occurred",
+                            style = MaterialTheme.typography.bodyLarge,
+                            textAlign = TextAlign.Center,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                        Spacer(Modifier.height(24.dp))
+                        Button(
+                            onClick = onBackClick,
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = MaterialTheme.colorScheme.primaryContainer,
+                                contentColor = MaterialTheme.colorScheme.onPrimaryContainer
+                            )
+                        ) {
+                            Text("Go Back")
+                        }
+                    }
                 }
             }
 
@@ -176,8 +207,11 @@ fun ItemScreen(
                     val encodedStorage = Uri.encode(uiState.state.containerName)
                     "kahon://item?roomName=$encodedRoom&storageName=$encodedStorage"
                 }
-                val qrBitmap = remember(deepLinkUrl) {
-                    QrCodeGenerator.generate(deepLinkUrl)
+                
+                val qrBitmap by produceState<Bitmap?>(initialValue = null, deepLinkUrl) {
+                    value = withContext(Dispatchers.Default) {
+                        QrCodeGenerator.generate(deepLinkUrl)
+                    }
                 }
 
                 LazyVerticalGrid(
@@ -236,10 +270,15 @@ fun ItemScreen(
                                             .padding(16.dp),
                                         contentAlignment = Alignment.Center
                                     ) {
-                                        Image(
-                                            bitmap = qrBitmap.asImageBitmap(),
-                                            contentDescription = "QR Code for ${uiState.state.containerName}",
-                                            modifier = Modifier.fillMaxSize()
+                                        qrBitmap?.let { bitmap ->
+                                            Image(
+                                                bitmap = bitmap.asImageBitmap(),
+                                                contentDescription = "QR Code for ${uiState.state.containerName}",
+                                                modifier = Modifier.fillMaxSize()
+                                            )
+                                        } ?: CircularProgressIndicator(
+                                            modifier = Modifier.size(40.dp),
+                                            strokeWidth = 2.dp
                                         )
                                     }
 

@@ -29,4 +29,7 @@ interface RoomDao {
 
     @androidx.room.Update
     suspend fun updateRoom(room: Room)
+
+    @Query("SELECT EXISTS(SELECT 1 FROM room WHERE name = :roomName)")
+    suspend fun doesRoomExist(roomName: String): Boolean
 }
