@@ -31,13 +31,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-
-data class CardPalette(
-    val gradientStart: Color,
-    val gradientEnd: Color,
-    val iconTint: Color,
-    val textTint: Color,
-)
+import com.example.kahon.core.ui.CardPalette
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable

@@ -13,6 +13,6 @@ data class StorageRoute(
 
 @Serializable
 data class ItemRoute(
-    val containerId: String,
-    val containerName: String
+    val roomName: String = "",
+    val storageName: String = ""
 )

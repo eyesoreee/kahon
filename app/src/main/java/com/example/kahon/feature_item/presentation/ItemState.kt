@@ -1,8 +1,9 @@
 package com.example.kahon.feature_item.presentation
 
+import com.example.kahon.feature_item.domain.model.Item
+
 data class ItemState(
-    // TODO: Add your screen-specific data here
-    val isLoading: Boolean = false,
-    val items: List<Any> = emptyList(),
-    val error: String? = null,
+    val containerName: String = "",
+    val roomName: String = "",
+    val items: List<Item> = emptyList(),
 )
