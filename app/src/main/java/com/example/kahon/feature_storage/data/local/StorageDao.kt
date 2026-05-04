@@ -13,6 +13,7 @@ interface StorageDao {
         SELECT 
             storage.id AS id, 
             storage.name AS name, 
+            storage.color AS color,
             COUNT(item.id) AS itemCount 
         FROM storage 
         LEFT JOIN item ON storage.id = item.storageId 

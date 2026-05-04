@@ -15,8 +15,15 @@ import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.BoxWithConstraints
+import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.input.rememberTextFieldState
+import com.example.kahon.core.ui.toCardPalette
+import com.example.kahon.core.ui.toRoomIcon
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.outlined.Settings
@@ -84,6 +91,8 @@ fun RoomScreen(
 
     var isAddRoomDialogOpen by remember { mutableStateOf(false) }
     var newRoomName by remember { mutableStateOf("") }
+    var selectedColor by remember { mutableStateOf(KahonCardPalettes.first().gradientStart.value.toLong()) }
+    var selectedIconKey by remember { mutableStateOf(KahonRoomIcons.keys.first()) }
 
     var isRoomOptionsDialogOpen by remember { mutableStateOf(false) }
     var selectedRoom by remember { mutableStateOf<RoomWithCount?>(null) }
@@ -114,18 +123,56 @@ fun RoomScreen(
             },
             title = { Text(text = "Add New Room") },
             text = {
-                OutlinedTextField(
-                    value = newRoomName,
-                    onValueChange = { newRoomName = it },
-                    label = { Text("Room Name") },
-                    singleLine = true,
-                    modifier = Modifier.fillMaxWidth()
-                )
+                Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
+                    OutlinedTextField(
+                        value = newRoomName,
+                        onValueChange = { newRoomName = it },
+                        label = { Text("Room Name") },
+                        singleLine = true,
+                        modifier = Modifier.fillMaxWidth()
+                    )
+
+                    Text("Select Icon", style = MaterialTheme.typography.labelLarge)
+                    LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        items(KahonRoomIcons.keys.toList()) { key ->
+                            val icon = KahonRoomIcons[key]!!
+                            Surface(
+                                onClick = { selectedIconKey = key },
+                                shape = CircleShape,
+                                color = if (selectedIconKey == key) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surfaceVariant,
+                                modifier = Modifier.size(48.dp)
+                            ) {
+                                Box(contentAlignment = Alignment.Center) {
+                                    Icon(
+                                        imageVector = icon,
+                                        contentDescription = null,
+                                        modifier = Modifier.size(24.dp),
+                                        tint = if (selectedIconKey == key) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onSurfaceVariant
+                                    )
+                                }
+                            }
+                        }
+                    }
+
+                    Text("Select Color", style = MaterialTheme.typography.labelLarge)
+                    LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        items(KahonCardPalettes) { palette ->
+                            val colorValue = palette.gradientStart.value.toLong()
+                            Surface(
+                                onClick = { selectedColor = colorValue },
+                                shape = CircleShape,
+                                color = palette.gradientStart,
+                                modifier = Modifier.size(40.dp),
+                                border = if (selectedColor == colorValue) BorderStroke(2.dp, MaterialTheme.colorScheme.outline) else null
+                            ) {}
+                        }
+                    }
+                }
             },
             confirmButton = {
                 Button(
                     onClick = {
-                        onAction(RoomAction.OnConfirmAddRoom(newRoomName))
+                        onAction(RoomAction.OnConfirmAddRoom(newRoomName, selectedColor, selectedIconKey))
                         isAddRoomDialogOpen = false
                         newRoomName = ""
                     },
@@ -191,21 +238,59 @@ fun RoomScreen(
                 editRoomName = ""
                 selectedRoom = null
             },
-            title = { Text(text = "Edit Room Name") },
+            title = { Text(text = "Edit Room") },
             text = {
-                OutlinedTextField(
-                    value = editRoomName,
-                    onValueChange = { editRoomName = it },
-                    label = { Text("Room Name") },
-                    singleLine = true,
-                    modifier = Modifier.fillMaxWidth()
-                )
+                Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
+                    OutlinedTextField(
+                        value = editRoomName,
+                        onValueChange = { editRoomName = it },
+                        label = { Text("Room Name") },
+                        singleLine = true,
+                        modifier = Modifier.fillMaxWidth()
+                    )
+
+                    Text("Select Icon", style = MaterialTheme.typography.labelLarge)
+                    LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        items(KahonRoomIcons.keys.toList()) { key ->
+                            val icon = KahonRoomIcons[key]!!
+                            Surface(
+                                onClick = { selectedIconKey = key },
+                                shape = CircleShape,
+                                color = if (selectedIconKey == key) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surfaceVariant,
+                                modifier = Modifier.size(48.dp)
+                            ) {
+                                Box(contentAlignment = Alignment.Center) {
+                                    Icon(
+                                        imageVector = icon,
+                                        contentDescription = null,
+                                        modifier = Modifier.size(24.dp),
+                                        tint = if (selectedIconKey == key) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onSurfaceVariant
+                                    )
+                                }
+                            }
+                        }
+                    }
+
+                    Text("Select Color", style = MaterialTheme.typography.labelLarge)
+                    LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        items(KahonCardPalettes) { palette ->
+                            val colorValue = palette.gradientStart.value.toLong()
+                            Surface(
+                                onClick = { selectedColor = colorValue },
+                                shape = CircleShape,
+                                color = palette.gradientStart,
+                                modifier = Modifier.size(40.dp),
+                                border = if (selectedColor == colorValue) BorderStroke(2.dp, MaterialTheme.colorScheme.outline) else null
+                            ) {}
+                        }
+                    }
+                }
             },
             confirmButton = {
                 Button(
                     onClick = {
                         selectedRoom?.let {
-                            onAction(RoomAction.OnConfirmEditRoom(it.id, editRoomName))
+                            onAction(RoomAction.OnConfirmEditRoom(it.id, editRoomName, selectedColor, selectedIconKey))
                         }
                         isEditRoomDialogOpen = false
                         editRoomName = ""
@@ -350,17 +435,19 @@ fun RoomScreen(
                         modifier = Modifier.fillMaxWidth()
                     ) {
                         items(uiState.roomState.rooms) { room ->
-                            val index = uiState.roomState.rooms.indexOf(room)
                             RoomCard(
                                 name = room.name,
                                 storageCount = room.storageCount,
-                                palette = KahonCardPalettes[index % KahonCardPalettes.size],
-                                icon = KahonRoomIcons[index % KahonRoomIcons.size],
+                                palette = room.color.toCardPalette(),
+                                icon = room.icon.toRoomIcon(),
                                 onClick = {
                                     onRoomClick(room.id, room.name)
                                 },
                                 onLongClick = {
                                     selectedRoom = room
+                                    editRoomName = room.name
+                                    selectedColor = room.color
+                                    selectedIconKey = room.icon
                                     isRoomOptionsDialogOpen = true
                                 }
                             )

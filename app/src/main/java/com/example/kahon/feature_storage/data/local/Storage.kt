@@ -27,5 +27,8 @@ data class Storage(
     val name: String,
 
     @ColumnInfo(name = "roomId")
-    val roomId: Long
+    val roomId: Long,
+
+    @ColumnInfo(name = "color")
+    val color: Long
 )

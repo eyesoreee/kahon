@@ -1,7 +1,12 @@
 package com.example.kahon.feature_storage.presentation
 
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.items
+import com.example.kahon.core.ui.toCardPalette
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -81,6 +86,7 @@ fun StorageScreen(
 ) {
     var isAddStorageDialogOpen by remember { mutableStateOf(false) }
     var newStorageName by remember { mutableStateOf("") }
+    var selectedColor by remember { mutableStateOf(KahonCardPalettes.first().gradientStart.value.toLong()) }
 
     var isStorageOptionsDialogOpen by remember { mutableStateOf(false) }
     var selectedStorage by remember { mutableStateOf<StorageWithCount?>(null) }
@@ -96,18 +102,34 @@ fun StorageScreen(
             },
             title = { Text(text = "Add New Box") },
             text = {
-                OutlinedTextField(
-                    value = newStorageName,
-                    onValueChange = { newStorageName = it },
-                    label = { Text("Box Name") },
-                    singleLine = true,
-                    modifier = Modifier.fillMaxWidth()
-                )
+                Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
+                    OutlinedTextField(
+                        value = newStorageName,
+                        onValueChange = { newStorageName = it },
+                        label = { Text("Box Name") },
+                        singleLine = true,
+                        modifier = Modifier.fillMaxWidth()
+                    )
+
+                    Text("Select Color", style = MaterialTheme.typography.labelLarge)
+                    LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        items(KahonCardPalettes) { palette ->
+                            val colorValue = palette.gradientStart.value.toLong()
+                            Surface(
+                                onClick = { selectedColor = colorValue },
+                                shape = CircleShape,
+                                color = palette.gradientStart,
+                                modifier = Modifier.size(40.dp),
+                                border = if (selectedColor == colorValue) BorderStroke(2.dp, MaterialTheme.colorScheme.outline) else null
+                            ) {}
+                        }
+                    }
+                }
             },
             confirmButton = {
                 Button(
                     onClick = {
-                        onAction(StorageAction.OnConfirmAddStorage(newStorageName))
+                        onAction(StorageAction.OnConfirmAddStorage(newStorageName, selectedColor))
                         isAddStorageDialogOpen = false
                         newStorageName = ""
                     },
@@ -171,21 +193,37 @@ fun StorageScreen(
                 editStorageName = ""
                 selectedStorage = null
             },
-            title = { Text(text = "Edit Box Name") },
+            title = { Text(text = "Edit Box") },
             text = {
-                OutlinedTextField(
-                    value = editStorageName,
-                    onValueChange = { editStorageName = it },
-                    label = { Text("Box Name") },
-                    singleLine = true,
-                    modifier = Modifier.fillMaxWidth()
-                )
+                Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
+                    OutlinedTextField(
+                        value = editStorageName,
+                        onValueChange = { editStorageName = it },
+                        label = { Text("Box Name") },
+                        singleLine = true,
+                        modifier = Modifier.fillMaxWidth()
+                    )
+
+                    Text("Select Color", style = MaterialTheme.typography.labelLarge)
+                    LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        items(KahonCardPalettes) { palette ->
+                            val colorValue = palette.gradientStart.value.toLong()
+                            Surface(
+                                onClick = { selectedColor = colorValue },
+                                shape = CircleShape,
+                                color = palette.gradientStart,
+                                modifier = Modifier.size(40.dp),
+                                border = if (selectedColor == colorValue) BorderStroke(2.dp, MaterialTheme.colorScheme.outline) else null
+                            ) {}
+                        }
+                    }
+                }
             },
             confirmButton = {
                 Button(
                     onClick = {
                         selectedStorage?.let {
-                            onAction(StorageAction.OnConfirmEditStorage(it.id, editStorageName))
+                            onAction(StorageAction.OnConfirmEditStorage(it.id, editStorageName, selectedColor))
                         }
                         isEditStorageDialogOpen = false
                         editStorageName = ""
@@ -322,17 +360,18 @@ fun StorageScreen(
                     }
 
                     items(uiState.storageState.storages) { storage ->
-                        val index = uiState.storageState.storages.indexOf(storage)
                         StorageCard(
                             name = storage.name,
                             itemCount = storage.itemCount,
-                            palette = cardPalettes[index % cardPalettes.size],
+                            palette = storage.color.toCardPalette(),
                             icon = Icons.Outlined.Inventory2,
                             onClick = {
                                 onStorageClick(storage.name, roomName)
                             },
                             onLongClick = {
                                 selectedStorage = storage
+                                editStorageName = storage.name
+                                selectedColor = storage.color
                                 isStorageOptionsDialogOpen = true
                             }
                         )

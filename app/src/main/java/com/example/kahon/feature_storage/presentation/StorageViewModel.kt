@@ -32,9 +32,9 @@ class StorageViewModel @Inject constructor(
 
     fun onAction(action: StorageAction) {
         when (action) {
-            is StorageAction.OnConfirmAddStorage -> onConfirmAddStorage(action.name)
+            is StorageAction.OnConfirmAddStorage -> onConfirmAddStorage(action.name, action.color)
             is StorageAction.OnDeleteStorage -> onDeleteStorage(action.id)
-            is StorageAction.OnConfirmEditStorage -> onConfirmEditStorage(action.id, action.newName)
+            is StorageAction.OnConfirmEditStorage -> onConfirmEditStorage(action.id, action.newName, action.newColor)
         }
     }
 
@@ -54,14 +54,15 @@ class StorageViewModel @Inject constructor(
         }
     }
 
-    private fun onConfirmAddStorage(name: String) {
+    private fun onConfirmAddStorage(name: String, color: Long) {
         if (name.isBlank()) return
 
         viewModelScope.launch {
             storageRepository.insertStorage(
                 Storage(
                     name = name,
-                    roomId = roomId
+                    roomId = roomId,
+                    color = color
                 )
             )
             loadStorages()
@@ -75,7 +76,7 @@ class StorageViewModel @Inject constructor(
         }
     }
 
-    private fun onConfirmEditStorage(id: Long, newName: String) {
+    private fun onConfirmEditStorage(id: Long, newName: String, newColor: Long) {
         if (newName.isBlank()) return
 
         viewModelScope.launch {
@@ -83,7 +84,8 @@ class StorageViewModel @Inject constructor(
                 Storage(
                     id = id,
                     name = newName,
-                    roomId = roomId
+                    roomId = roomId,
+                    color = newColor
                 )
             )
             loadStorages()

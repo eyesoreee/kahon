@@ -10,5 +10,11 @@ data class Room(
     val id: Long = 0,
 
     @ColumnInfo(name = "name")
-    val name: String
+    val name: String,
+
+    @ColumnInfo(name = "color")
+    val color: Long,
+
+    @ColumnInfo(name = "icon")
+    val icon: String
 )

@@ -26,11 +26,20 @@ val KahonCardPalettes = listOf(
     CardPalette(Color(0xFFE0C47B), Color(0xFFFDE9B5), Color(0xFF7A5A1C), Color(0xFF45320D)),
 )
 
-val KahonRoomIcons: List<ImageVector> = listOf(
-    Icons.Outlined.Weekend,
-    Icons.Outlined.Bed,
-    Icons.Outlined.Kitchen,
-    Icons.Outlined.Checkroom,
-    Icons.Outlined.Chair,
-    Icons.Outlined.Storage,
+fun Long.toCardPalette(): CardPalette {
+    return KahonCardPalettes.find { it.gradientStart.value.toLong() == this }
+        ?: KahonCardPalettes.first()
+}
+
+val KahonRoomIcons = mapOf(
+    "weekend" to Icons.Outlined.Weekend,
+    "bed" to Icons.Outlined.Bed,
+    "kitchen" to Icons.Outlined.Kitchen,
+    "checkroom" to Icons.Outlined.Checkroom,
+    "chair" to Icons.Outlined.Chair,
+    "storage" to Icons.Outlined.Storage,
 )
+
+fun String.toRoomIcon(): ImageVector {
+    return KahonRoomIcons[this] ?: Icons.Outlined.Weekend
+}

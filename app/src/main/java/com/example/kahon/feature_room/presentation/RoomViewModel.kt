@@ -24,9 +24,9 @@ class RoomViewModel @Inject constructor(
 
     fun onAction(action: RoomAction) {
         when (action) {
-            is RoomAction.OnConfirmAddRoom -> onConfirmAddRoom(action.name)
+            is RoomAction.OnConfirmAddRoom -> onConfirmAddRoom(action.name, action.color, action.icon)
             is RoomAction.OnDeleteRoom -> onDeleteRoom(action.id)
-            is RoomAction.OnConfirmEditRoom -> onConfirmEditRoom(action.id, action.newName)
+            is RoomAction.OnConfirmEditRoom -> onConfirmEditRoom(action.id, action.newName, action.newColor, action.newIcon)
         }
     }
 
@@ -46,11 +46,17 @@ class RoomViewModel @Inject constructor(
         }
     }
 
-    private fun onConfirmAddRoom(name: String) {
+    private fun onConfirmAddRoom(name: String, color: Long, icon: String) {
         if (name.isBlank()) return
 
         viewModelScope.launch {
-            roomRepository.insertRoom(Room(name = name))
+            roomRepository.insertRoom(
+                Room(
+                    name = name,
+                    color = color,
+                    icon = icon
+                )
+            )
             loadRooms()
         }
     }
@@ -62,14 +68,16 @@ class RoomViewModel @Inject constructor(
         }
     }
 
-    private fun onConfirmEditRoom(id: Long, newName: String) {
+    private fun onConfirmEditRoom(id: Long, newName: String, newColor: Long, newIcon: String) {
         if (newName.isBlank()) return
 
         viewModelScope.launch {
             roomRepository.updateRoom(
                 Room(
                     id = id,
-                    name = newName
+                    name = newName,
+                    color = newColor,
+                    icon = newIcon
                 )
             )
             loadRooms()

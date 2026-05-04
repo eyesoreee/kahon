@@ -13,6 +13,8 @@ interface RoomDao {
         SELECT 
             room.id AS id, 
             room.name AS name, 
+            room.color AS color,
+            room.icon AS icon,
             COUNT(storage.id) AS storageCount 
         FROM room 
         LEFT JOIN storage ON room.id = storage.roomId 
