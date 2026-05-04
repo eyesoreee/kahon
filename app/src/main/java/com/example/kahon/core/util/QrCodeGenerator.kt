@@ -3,6 +3,7 @@ package com.example.kahon.core.util
 import android.graphics.Bitmap
 import android.graphics.Color
 import androidx.core.graphics.createBitmap
+import androidx.core.graphics.set
 import com.google.zxing.BarcodeFormat
 import com.google.zxing.qrcode.QRCodeWriter
 
@@ -15,17 +16,14 @@ object QrCodeGenerator {
     ): Bitmap {
         val writer = QRCodeWriter()
         val bitMatrix = writer.encode(content, BarcodeFormat.QR_CODE, size, size)
-
-        val pixels = IntArray(size * size)
-        for (y in 0 until size) {
-            val offset = y * size
-            for (x in 0 until size) {
-                pixels[offset + x] = if (bitMatrix[x, y]) onColor else offColor
+        val width = bitMatrix.width
+        val height = bitMatrix.height
+        val bitmap = createBitmap(width, height, Bitmap.Config.ARGB_8888)
+        for (x in 0 until width) {
+            for (y in 0 until height) {
+                bitmap[x, y] = if (bitMatrix[x, y]) onColor else offColor
             }
         }
-
-        val bitmap = createBitmap(size, size, Bitmap.Config.ARGB_8888)
-        bitmap.setPixels(pixels, 0, size, 0, 0, size, size)
         return bitmap
     }
 }
