@@ -48,10 +48,13 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.produceState
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.graphics.toArgb
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -60,8 +63,9 @@ import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.kahon.core.ui.KahonCardPalettes
 import com.example.kahon.core.util.QrCodeGenerator
-import androidx.compose.ui.graphics.toArgb
+import com.example.kahon.core.util.ShareUtils
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
 @Composable
@@ -205,6 +209,8 @@ fun ItemScreen(
             }
 
             is ItemUiState.Ready -> {
+                val context = LocalContext.current
+                val scope = rememberCoroutineScope()
                 val deepLinkUrl = remember(uiState.state.roomName, uiState.state.containerName) {
                     val encodedRoom = Uri.encode(uiState.state.roomName)
                     val encodedStorage = Uri.encode(uiState.state.containerName)
@@ -297,7 +303,19 @@ fun ItemScreen(
                                         horizontalArrangement = Arrangement.SpaceEvenly
                                     ) {
                                         Button(
-                                            onClick = {},
+                                            onClick = {
+                                                scope.launch(Dispatchers.Default) {
+                                                    val shareBitmap =
+                                                        QrCodeGenerator.generate(deepLinkUrl)
+                                                    withContext(Dispatchers.Main) {
+                                                        ShareUtils.shareQrCode(
+                                                            context,
+                                                            shareBitmap,
+                                                            uiState.state.containerName
+                                                        )
+                                                    }
+                                                }
+                                            },
                                             colors = ButtonDefaults.buttonColors(
                                                 containerColor = Color.Transparent,
                                                 contentColor = MaterialTheme.colorScheme.primary
