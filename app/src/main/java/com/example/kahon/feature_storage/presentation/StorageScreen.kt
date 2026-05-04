@@ -1,12 +1,8 @@
 package com.example.kahon.feature_storage.presentation
 
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.lazy.LazyRow
-import androidx.compose.foundation.lazy.items
-import com.example.kahon.core.ui.toCardPalette
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -14,8 +10,10 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -42,6 +40,7 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -54,6 +53,7 @@ import androidx.compose.ui.unit.sp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.kahon.core.ui.KahonCardPalettes
+import com.example.kahon.core.ui.toCardPalette
 import com.example.kahon.feature_storage.domain.model.StorageWithCount
 
 private val cardPalettes = KahonCardPalettes
@@ -86,7 +86,7 @@ fun StorageScreen(
 ) {
     var isAddStorageDialogOpen by remember { mutableStateOf(false) }
     var newStorageName by remember { mutableStateOf("") }
-    var selectedColor by remember { mutableStateOf(KahonCardPalettes.first().gradientStart.value.toLong()) }
+    var selectedColor by remember { mutableLongStateOf(KahonCardPalettes.first().gradientStart.value.toLong()) }
 
     var isStorageOptionsDialogOpen by remember { mutableStateOf(false) }
     var selectedStorage by remember { mutableStateOf<StorageWithCount?>(null) }
@@ -120,7 +120,10 @@ fun StorageScreen(
                                 shape = CircleShape,
                                 color = palette.gradientStart,
                                 modifier = Modifier.size(40.dp),
-                                border = if (selectedColor == colorValue) BorderStroke(2.dp, MaterialTheme.colorScheme.outline) else null
+                                border = if (selectedColor == colorValue) BorderStroke(
+                                    2.dp,
+                                    MaterialTheme.colorScheme.outline
+                                ) else null
                             ) {}
                         }
                     }
@@ -213,7 +216,10 @@ fun StorageScreen(
                                 shape = CircleShape,
                                 color = palette.gradientStart,
                                 modifier = Modifier.size(40.dp),
-                                border = if (selectedColor == colorValue) BorderStroke(2.dp, MaterialTheme.colorScheme.outline) else null
+                                border = if (selectedColor == colorValue) BorderStroke(
+                                    2.dp,
+                                    MaterialTheme.colorScheme.outline
+                                ) else null
                             ) {}
                         }
                     }
@@ -223,7 +229,13 @@ fun StorageScreen(
                 Button(
                     onClick = {
                         selectedStorage?.let {
-                            onAction(StorageAction.OnConfirmEditStorage(it.id, editStorageName, selectedColor))
+                            onAction(
+                                StorageAction.OnConfirmEditStorage(
+                                    it.id,
+                                    editStorageName,
+                                    selectedColor
+                                )
+                            )
                         }
                         isEditStorageDialogOpen = false
                         editStorageName = ""
@@ -378,7 +390,13 @@ fun StorageScreen(
                     }
 
                     item {
-                        Spacer(Modifier.height(80.dp)) // Padding for FAB
+                        AddStorageCard(
+                            onClick = { isAddStorageDialogOpen = true }
+                        )
+                    }
+
+                    item {
+                        Spacer(Modifier.height(80.dp))
                     }
                 }
             }

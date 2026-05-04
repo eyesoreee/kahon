@@ -1,5 +1,6 @@
 package com.example.kahon.feature_item.presentation
 
+import android.graphics.Bitmap
 import android.net.Uri
 import android.util.Log
 import androidx.compose.foundation.Image
@@ -47,9 +48,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.produceState
 import androidx.compose.runtime.remember
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.withContext
-import android.graphics.Bitmap
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -62,7 +60,9 @@ import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.kahon.core.ui.KahonCardPalettes
 import com.example.kahon.core.util.QrCodeGenerator
-import com.example.kahon.feature_item.domain.model.Item
+import androidx.compose.ui.graphics.toArgb
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 
 @Composable
 fun ItemRoot(
@@ -71,7 +71,10 @@ fun ItemRoot(
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
-    Log.d("ItemRoot", "Composed with roomName: ${viewModel.roomName}, storageName: ${viewModel.storageName}")
+    Log.d(
+        "ItemRoot",
+        "Composed with roomName: ${viewModel.roomName}, storageName: ${viewModel.storageName}"
+    )
 
     ItemScreen(
         uiState = uiState,
@@ -207,10 +210,17 @@ fun ItemScreen(
                     val encodedStorage = Uri.encode(uiState.state.containerName)
                     "kahon://item?roomName=$encodedRoom&storageName=$encodedStorage"
                 }
-                
+
+                val qrOnColor = MaterialTheme.colorScheme.primary.toArgb()
+                val qrOffColor = Color.Transparent.toArgb()
+
                 val qrBitmap by produceState<Bitmap?>(initialValue = null, deepLinkUrl) {
                     value = withContext(Dispatchers.Default) {
-                        QrCodeGenerator.generate(deepLinkUrl)
+                        QrCodeGenerator.generate(
+                            content = deepLinkUrl,
+                            onColor = qrOnColor,
+                            offColor = qrOffColor
+                        )
                     }
                 }
 
