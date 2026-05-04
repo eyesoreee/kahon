@@ -3,6 +3,7 @@ package com.example.kahon.feature_item.presentation
 import android.graphics.Bitmap
 import android.net.Uri
 import android.util.Log
+import android.widget.Toast
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -27,8 +28,8 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.QrCode
+import androidx.compose.material.icons.outlined.Download
 import androidx.compose.material.icons.outlined.FilterList
-import androidx.compose.material.icons.outlined.Print
 import androidx.compose.material.icons.outlined.Search
 import androidx.compose.material.icons.outlined.Share
 import androidx.compose.material3.Button
@@ -330,17 +331,38 @@ fun ItemScreen(
                                             )
                                         }
                                         Button(
-                                            onClick = {},
+                                            onClick = {
+                                                scope.launch(Dispatchers.Default) {
+                                                    val downloadBitmap =
+                                                        QrCodeGenerator.generate(deepLinkUrl)
+                                                    val success = ShareUtils.saveQrCodeToGallery(
+                                                        context,
+                                                        downloadBitmap,
+                                                        uiState.state.containerName
+                                                    )
+                                                    withContext(Dispatchers.Main) {
+                                                        Toast.makeText(
+                                                            context,
+                                                            if (success) "QR Code saved to Gallery" else "Failed to save QR Code",
+                                                            Toast.LENGTH_SHORT
+                                                        ).show()
+                                                    }
+                                                }
+                                            },
                                             colors = ButtonDefaults.buttonColors(
                                                 containerColor = Color.Transparent,
                                                 contentColor = MaterialTheme.colorScheme.primary
                                             ),
                                             shape = RoundedCornerShape(50)
                                         ) {
-                                            Icon(Icons.Outlined.Print, null, Modifier.size(18.dp))
+                                            Icon(
+                                                Icons.Outlined.Download,
+                                                null,
+                                                Modifier.size(18.dp)
+                                            )
                                             Spacer(Modifier.width(8.dp))
                                             Text(
-                                                "Print",
+                                                "Save",
                                                 style = MaterialTheme.typography.labelLarge
                                             )
                                         }
