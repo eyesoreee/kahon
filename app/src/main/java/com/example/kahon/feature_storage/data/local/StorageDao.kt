@@ -39,4 +39,12 @@ interface StorageDao {
         )
     """)
     suspend fun doesStorageExist(roomName: String, storageName: String): Boolean
+
+    @Query("""
+        SELECT storage.id FROM storage 
+        JOIN room ON storage.roomId = room.id 
+        WHERE storage.name = :storageName AND room.name = :roomName
+        LIMIT 1
+    """)
+    suspend fun getStorageId(roomName: String, storageName: String): Long?
 }

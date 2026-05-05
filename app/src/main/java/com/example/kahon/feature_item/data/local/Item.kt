@@ -32,6 +32,9 @@ data class Item(
     @ColumnInfo(name = "quantity")
     val quantity: Int,
 
+    @ColumnInfo(name = "category")
+    val category: String,
+
     @ColumnInfo(name = "imagePath")
     val imagePath: String? = null
 )

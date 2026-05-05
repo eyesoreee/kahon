@@ -28,4 +28,8 @@ class StorageRepositoryImp @Inject constructor(
     override suspend fun doesStorageExist(roomName: String, storageName: String): Boolean {
         return storageDao.doesStorageExist(roomName, storageName)
     }
+
+    override suspend fun getStorageId(roomName: String, storageName: String): Long? {
+        return storageDao.getStorageId(roomName, storageName)
+    }
 }

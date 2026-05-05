@@ -9,4 +9,5 @@ interface StorageRepository {
     suspend fun deleteStorage(id: Long)
     suspend fun updateStorage(storage: Storage)
     suspend fun doesStorageExist(roomName: String, storageName: String): Boolean
+    suspend fun getStorageId(roomName: String, storageName: String): Long?
 }

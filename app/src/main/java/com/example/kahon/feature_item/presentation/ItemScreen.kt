@@ -2,7 +2,6 @@ package com.example.kahon.feature_item.presentation
 
 import android.graphics.Bitmap
 import android.net.Uri
-import android.util.Log
 import android.widget.Toast
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
@@ -29,8 +28,6 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.QrCode
 import androidx.compose.material.icons.outlined.Download
-import androidx.compose.material.icons.outlined.FilterList
-import androidx.compose.material.icons.outlined.Search
 import androidx.compose.material.icons.outlined.Share
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -76,11 +73,6 @@ fun ItemRoot(
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
-    Log.d(
-        "ItemRoot",
-        "Composed with roomName: ${viewModel.roomName}, storageName: ${viewModel.storageName}"
-    )
-
     ItemScreen(
         uiState = uiState,
         onAction = viewModel::onAction,
@@ -120,7 +112,7 @@ fun ItemScreen(
                             modifier = Modifier.padding(vertical = 4.dp)
                         ) {
                             Text(
-                                text = "${uiState.state.roomName} / ${uiState.state.containerName}",
+                                text = "${uiState.state.roomName} / ${uiState.state.storageName}",
                                 style = MaterialTheme.typography.labelMedium.copy(
                                     fontWeight = FontWeight.Medium
                                 ),
@@ -129,33 +121,19 @@ fun ItemScreen(
                             )
                         }
                     }
-                },
-                actions = {
-                    IconButton(onClick = {}) {
-                        Icon(
-                            imageVector = Icons.Outlined.Search,
-                            contentDescription = "Search",
-                            tint = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    }
-                    IconButton(onClick = {}) {
-                        Icon(
-                            imageVector = Icons.Outlined.FilterList,
-                            contentDescription = "Filter",
-                            tint = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    }
                 }
             )
         },
         floatingActionButton = {
-            FloatingActionButton(
-                onClick = { /* TODO */ },
-                containerColor = MaterialTheme.colorScheme.primary,
-                contentColor = MaterialTheme.colorScheme.onPrimary,
-                shape = CircleShape
-            ) {
-                Icon(imageVector = Icons.Default.Add, contentDescription = "Add Item")
+            if (uiState is ItemUiState.Ready) {
+                FloatingActionButton(
+                    onClick = { onAction(ItemAction.ShowAddItemDialog) },
+                    containerColor = MaterialTheme.colorScheme.primary,
+                    contentColor = MaterialTheme.colorScheme.onPrimary,
+                    shape = CircleShape
+                ) {
+                    Icon(imageVector = Icons.Default.Add, contentDescription = "Add Item")
+                }
             }
         }
     ) { innerPadding ->
@@ -212,9 +190,9 @@ fun ItemScreen(
             is ItemUiState.Ready -> {
                 val context = LocalContext.current
                 val scope = rememberCoroutineScope()
-                val deepLinkUrl = remember(uiState.state.roomName, uiState.state.containerName) {
+                val deepLinkUrl = remember(uiState.state.roomName, uiState.state.storageName) {
                     val encodedRoom = Uri.encode(uiState.state.roomName)
-                    val encodedStorage = Uri.encode(uiState.state.containerName)
+                    val encodedStorage = Uri.encode(uiState.state.storageName)
                     "kahon://item?roomName=$encodedRoom&storageName=$encodedStorage"
                 }
 
@@ -229,6 +207,43 @@ fun ItemScreen(
                             offColor = qrOffColor
                         )
                     }
+                }
+
+                if (uiState.state.isAddingItem) {
+                    AddItemDialog(
+                        categories = uiState.state.categories,
+                        onDismiss = { onAction(ItemAction.DismissDialog) },
+                        onConfirm = { name, category ->
+                            onAction(ItemAction.AddItem(name, category))
+                        },
+                        onDeleteCategory = { category ->
+                            onAction(ItemAction.DeleteCategory(category))
+                        }
+                    )
+                }
+
+                if (uiState.state.editingItem != null) {
+                    AddItemDialog(
+                        item = uiState.state.editingItem,
+                        categories = uiState.state.categories,
+                        onDismiss = { onAction(ItemAction.DismissDialog) },
+                        onConfirm = { name, category ->
+                            onAction(
+                                ItemAction.UpdateItem(
+                                    uiState.state.editingItem.copy(
+                                        name = name,
+                                        category = category
+                                    )
+                                )
+                            )
+                        },
+                        onDeleteCategory = { category ->
+                            onAction(ItemAction.DeleteCategory(category))
+                        },
+                        onDelete = {
+                            onAction(ItemAction.DeleteItem(uiState.state.editingItem))
+                        }
+                    )
                 }
 
                 LazyVerticalGrid(
@@ -246,7 +261,7 @@ fun ItemScreen(
                             horizontalAlignment = Alignment.CenterHorizontally
                         ) {
                             Text(
-                                text = uiState.state.containerName,
+                                text = uiState.state.storageName,
                                 style = MaterialTheme.typography.headlineLarge.copy(
                                     fontWeight = FontWeight.ExtraBold,
                                     letterSpacing = (-0.5).sp,
@@ -290,7 +305,7 @@ fun ItemScreen(
                                         qrBitmap?.let { bitmap ->
                                             Image(
                                                 bitmap = bitmap.asImageBitmap(),
-                                                contentDescription = "QR Code for ${uiState.state.containerName}",
+                                                contentDescription = "QR Code for ${uiState.state.storageName}",
                                                 modifier = Modifier.fillMaxSize()
                                             )
                                         } ?: CircularProgressIndicator(
@@ -312,7 +327,7 @@ fun ItemScreen(
                                                         ShareUtils.shareQrCode(
                                                             context,
                                                             shareBitmap,
-                                                            uiState.state.containerName
+                                                            uiState.state.storageName
                                                         )
                                                     }
                                                 }
@@ -338,9 +353,9 @@ fun ItemScreen(
                                                     val success = ShareUtils.saveQrCodeToGallery(
                                                         context,
                                                         downloadBitmap,
-                                                        uiState.state.containerName
+                                                        uiState.state.storageName
                                                     )
-                                                    
+
                                                     withContext(Dispatchers.Main) {
                                                         Toast.makeText(
                                                             context,
@@ -374,7 +389,7 @@ fun ItemScreen(
                             Spacer(Modifier.height(32.dp))
 
                             Text(
-                                text = "Inside this box",
+                                text = "Inside this storage (${uiState.state.items.size})",
                                 style = MaterialTheme.typography.titleLarge.copy(
                                     fontWeight = FontWeight.ExtraBold
                                 ),
@@ -385,11 +400,35 @@ fun ItemScreen(
                         }
                     }
 
-                    itemsIndexed(uiState.state.items) { index, item ->
-                        ItemCard(
-                            item = item,
-                            palette = KahonCardPalettes[index % KahonCardPalettes.size]
-                        )
+                    if (uiState.state.items.isEmpty()) {
+                        item(span = { GridItemSpan(2) }) {
+                            Column(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(vertical = 64.dp),
+                                horizontalAlignment = Alignment.CenterHorizontally,
+                                verticalArrangement = Arrangement.Center
+                            ) {
+                                Text(
+                                    text = "Empty Storage",
+                                    style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                                Text(
+                                    text = "Tap the + button to add items.",
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
+                                )
+                            }
+                        }
+                    } else {
+                        itemsIndexed(uiState.state.items) { index, item ->
+                            ItemCard(
+                                item = item,
+                                palette = KahonCardPalettes[index % KahonCardPalettes.size],
+                                onClick = { onAction(ItemAction.EditItem(item)) }
+                            )
+                        }
                     }
 
                     item(span = { GridItemSpan(2) }) {

@@ -27,15 +27,17 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.example.kahon.core.ui.CardPalette
-import com.example.kahon.feature_item.domain.model.Item
+import com.example.kahon.feature_item.data.local.Item
 
 @Composable
 fun ItemCard(
     item: Item,
     palette: CardPalette,
+    onClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     Card(
+        onClick = onClick,
         modifier = modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(20.dp)),
@@ -52,7 +54,6 @@ fun ItemCard(
         )
     ) {
         Column {
-            // Image Placeholder / Image Area
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -60,7 +61,6 @@ fun ItemCard(
                     .background(palette.gradientStart.copy(alpha = 0.05f)),
                 contentAlignment = Alignment.Center
             ) {
-                // Overlay camera icon if no image
                 Surface(
                     modifier = Modifier
                         .align(Alignment.TopEnd)
@@ -78,7 +78,6 @@ fun ItemCard(
                     )
                 }
 
-                // Placeholder icon in center
                 Icon(
                     imageVector = Icons.Outlined.PhotoCamera,
                     contentDescription = null,
@@ -87,7 +86,6 @@ fun ItemCard(
                 )
             }
 
-            // Text Info Area
             Column(
                 modifier = Modifier
                     .fillMaxWidth()

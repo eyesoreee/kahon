@@ -100,13 +100,13 @@ fun StorageScreen(
                 isAddStorageDialogOpen = false
                 newStorageName = ""
             },
-            title = { Text(text = "Add New Box") },
+            title = { Text(text = "Add New Storage") },
             text = {
                 Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
                     OutlinedTextField(
                         value = newStorageName,
                         onValueChange = { newStorageName = it },
-                        label = { Text("Box Name") },
+                        label = { Text("Storage Name") },
                         singleLine = true,
                         modifier = Modifier.fillMaxWidth()
                     )
@@ -158,7 +158,7 @@ fun StorageScreen(
                 isStorageOptionsDialogOpen = false
                 selectedStorage = null
             },
-            title = { Text(text = "Box Options") },
+            title = { Text(text = "Storage Options") },
             text = {
                 Text(text = "What would you like to do with \"${selectedStorage?.name}\"?")
             },
@@ -196,13 +196,13 @@ fun StorageScreen(
                 editStorageName = ""
                 selectedStorage = null
             },
-            title = { Text(text = "Edit Box") },
+            title = { Text(text = "Edit Storage") },
             text = {
                 Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
                     OutlinedTextField(
                         value = editStorageName,
                         onValueChange = { editStorageName = it },
-                        label = { Text("Box Name") },
+                        label = { Text("Storage Name") },
                         singleLine = true,
                         modifier = Modifier.fillMaxWidth()
                     )
@@ -317,7 +317,7 @@ fun StorageScreen(
                 contentColor = MaterialTheme.colorScheme.onPrimary,
                 shape = CircleShape
             ) {
-                Icon(imageVector = Icons.Default.Add, contentDescription = "Add Box")
+                Icon(imageVector = Icons.Default.Add, contentDescription = "Add Storage")
             }
         }
     ) { innerPadding ->
