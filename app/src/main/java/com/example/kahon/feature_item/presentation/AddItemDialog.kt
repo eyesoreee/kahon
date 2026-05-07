@@ -13,6 +13,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Close
@@ -37,6 +38,8 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.DialogProperties
 
@@ -46,11 +49,12 @@ fun AddItemDialog(
     item: com.example.kahon.feature_item.data.local.Item? = null,
     categories: List<String>,
     onDismiss: () -> Unit,
-    onConfirm: (name: String, category: String) -> Unit,
+    onConfirm: (name: String, category: String, quantity: Int) -> Unit,
     onDeleteCategory: (String) -> Unit,
     onDelete: (() -> Unit)? = null
 ) {
     var name by remember(item) { mutableStateOf(item?.name ?: "") }
+    var quantity by remember(item) { mutableStateOf(item?.quantity ?: 1) }
     var selectedCategory by remember(item) { mutableStateOf(item?.category ?: "") }
     var customCategory by remember { mutableStateOf("") }
     var isAddingCustomCategory by remember { mutableStateOf(false) }
@@ -99,6 +103,48 @@ fun AddItemDialog(
                         unfocusedBorderColor = MaterialTheme.colorScheme.outlineVariant
                     )
                 )
+
+                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Text(
+                        "Quantity",
+                        style = MaterialTheme.typography.labelLarge,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(12.dp)
+                    ) {
+                        IconButton(
+                            onClick = { if (quantity > 1) quantity-- },
+                            modifier = Modifier.size(40.dp)
+                        ) {
+                            Text("-", style = MaterialTheme.typography.headlineMedium)
+                        }
+
+                        OutlinedTextField(
+                            value = quantity.toString(),
+                            onValueChange = { newValue ->
+                                newValue.filter { it.isDigit() }.toIntOrNull()?.let { quantity = it }
+                            },
+                            modifier = Modifier.width(80.dp),
+                            textStyle = MaterialTheme.typography.bodyLarge.copy(textAlign = TextAlign.Center),
+                            shape = RoundedCornerShape(12.dp),
+                            singleLine = true,
+                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                            colors = OutlinedTextFieldDefaults.colors(
+                                focusedBorderColor = MaterialTheme.colorScheme.primary,
+                                unfocusedBorderColor = MaterialTheme.colorScheme.outlineVariant
+                            )
+                        )
+
+                        IconButton(
+                            onClick = { quantity++ },
+                            modifier = Modifier.size(40.dp)
+                        ) {
+                            Text("+", style = MaterialTheme.typography.headlineMedium)
+                        }
+                    }
+                }
 
                 Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     Text(
@@ -186,7 +232,7 @@ fun AddItemDialog(
             Button(
                 onClick = {
                     val category = if (isAddingCustomCategory) customCategory else selectedCategory
-                    onConfirm(name, category.ifBlank { "Uncategorized" })
+                    onConfirm(name, category.ifBlank { "Uncategorized" }, quantity)
                 },
                 enabled = name.isNotBlank(),
                 shape = RoundedCornerShape(50)

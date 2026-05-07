@@ -213,8 +213,8 @@ fun ItemScreen(
                     AddItemDialog(
                         categories = uiState.state.categories,
                         onDismiss = { onAction(ItemAction.DismissDialog) },
-                        onConfirm = { name, category ->
-                            onAction(ItemAction.AddItem(name, category))
+                        onConfirm = { name, category, quantity ->
+                            onAction(ItemAction.AddItem(name, category, quantity))
                         },
                         onDeleteCategory = { category ->
                             onAction(ItemAction.DeleteCategory(category))
@@ -227,12 +227,13 @@ fun ItemScreen(
                         item = uiState.state.editingItem,
                         categories = uiState.state.categories,
                         onDismiss = { onAction(ItemAction.DismissDialog) },
-                        onConfirm = { name, category ->
+                        onConfirm = { name, category, quantity ->
                             onAction(
                                 ItemAction.UpdateItem(
                                     uiState.state.editingItem.copy(
                                         name = name,
-                                        category = category
+                                        category = category,
+                                        quantity = quantity
                                     )
                                 )
                             )

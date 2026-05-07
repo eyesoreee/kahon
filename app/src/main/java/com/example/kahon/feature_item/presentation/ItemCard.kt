@@ -107,7 +107,7 @@ fun ItemCard(
                     color = palette.gradientStart.copy(alpha = 0.1f),
                 ) {
                     Text(
-                        text = item.category,
+                        text = "${item.quantity}pcs • ${item.category}",
                         style = MaterialTheme.typography.labelSmall,
                         color = palette.gradientStart,
                         fontWeight = FontWeight.Medium,

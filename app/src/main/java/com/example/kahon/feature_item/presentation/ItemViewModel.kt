@@ -67,7 +67,7 @@ class ItemViewModel @Inject constructor(
                         name = action.name,
                         category = action.category,
                         storageId = sId,
-                        quantity = 1
+                        quantity = action.quantity
                     )
                     itemRepository.insertItem(newItem)
                     loadData()
