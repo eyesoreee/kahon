@@ -17,12 +17,11 @@ import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.input.rememberTextFieldState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.outlined.FilterList
 import androidx.compose.material.icons.outlined.Inventory2
-import androidx.compose.material.icons.outlined.Search
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
@@ -33,20 +32,26 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SearchBar
+import androidx.compose.material3.SearchBarDefaults
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.material3.rememberSearchBarState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -55,6 +60,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.kahon.core.ui.KahonCardPalettes
 import com.example.kahon.core.ui.toCardPalette
 import com.example.kahon.feature_storage.domain.model.StorageWithCount
+import kotlinx.coroutines.launch
 
 private val cardPalettes = KahonCardPalettes
 
@@ -84,6 +90,10 @@ fun StorageScreen(
     onBackClick: () -> Unit,
     onStorageClick: (String, String) -> Unit
 ) {
+    val searchBarState = rememberSearchBarState()
+    val textFieldState = rememberTextFieldState()
+    val scope = rememberCoroutineScope()
+
     var isAddStorageDialogOpen by remember { mutableStateOf(false) }
     var newStorageName by remember { mutableStateOf("") }
     var selectedColor by remember { mutableLongStateOf(KahonCardPalettes.first().gradientStart.value.toLong()) }
@@ -93,6 +103,21 @@ fun StorageScreen(
 
     var isEditStorageDialogOpen by remember { mutableStateOf(false) }
     var editStorageName by remember { mutableStateOf("") }
+
+    val inputField = @Composable {
+        SearchBarDefaults.InputField(
+            textFieldState = textFieldState,
+            searchBarState = searchBarState,
+            onSearch = { scope.launch { searchBarState.animateToCollapsed() } },
+            placeholder = {
+                Text(
+                    modifier = Modifier.clearAndSetSemantics {},
+                    text = "Search storages…",
+                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)
+                )
+            },
+        )
+    }
 
     if (isAddStorageDialogOpen) {
         AlertDialog(
@@ -292,20 +317,6 @@ fun StorageScreen(
                     }
                 },
                 actions = {
-                    IconButton(onClick = {}) {
-                        Icon(
-                            imageVector = Icons.Outlined.Search,
-                            contentDescription = "Search",
-                            tint = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    }
-                    IconButton(onClick = {}) {
-                        Icon(
-                            imageVector = Icons.Outlined.FilterList,
-                            contentDescription = "Filter",
-                            tint = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    }
                     Spacer(Modifier.width(8.dp))
                 }
             )
@@ -335,6 +346,19 @@ fun StorageScreen(
             }
 
             is StorageUiState.Ready -> {
+                val filteredStorages by remember(uiState.storageState.storages, textFieldState.text) {
+                    derivedStateOf {
+                        val query = textFieldState.text.toString()
+                        if (query.isBlank()) {
+                            uiState.storageState.storages
+                        } else {
+                            uiState.storageState.storages.filter {
+                                it.name.contains(query, ignoreCase = true)
+                            }
+                        }
+                    }
+                }
+
                 LazyColumn(
                     modifier = Modifier
                         .fillMaxSize()
@@ -344,6 +368,11 @@ fun StorageScreen(
                 ) {
                     item {
                         Spacer(Modifier.height(12.dp))
+
+                        SearchBar(state = searchBarState, inputField = inputField)
+
+                        Spacer(Modifier.height(12.dp))
+
                         Row(
                             modifier = Modifier.fillMaxWidth(),
                             verticalAlignment = Alignment.CenterVertically,
@@ -371,7 +400,7 @@ fun StorageScreen(
                         Spacer(Modifier.height(16.dp))
                     }
 
-                    items(uiState.storageState.storages) { storage ->
+                    items(filteredStorages) { storage ->
                         StorageCard(
                             name = storage.name,
                             itemCount = storage.itemCount,
