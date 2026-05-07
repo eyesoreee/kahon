@@ -1,5 +1,6 @@
 package com.example.kahon.feature_room.presentation
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -11,19 +12,14 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
-import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.BorderStroke
-import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.BoxWithConstraints
-import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.input.rememberTextFieldState
-import com.example.kahon.core.ui.toCardPalette
-import com.example.kahon.core.ui.toRoomIcon
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.outlined.Settings
@@ -45,7 +41,9 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.rememberSearchBarState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -61,6 +59,8 @@ import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.kahon.core.ui.KahonCardPalettes
 import com.example.kahon.core.ui.KahonRoomIcons
+import com.example.kahon.core.ui.toCardPalette
+import com.example.kahon.core.ui.toRoomIcon
 import com.example.kahon.feature_room.domain.model.RoomWithCount
 import kotlinx.coroutines.launch
 
@@ -91,7 +91,7 @@ fun RoomScreen(
 
     var isAddRoomDialogOpen by remember { mutableStateOf(false) }
     var newRoomName by remember { mutableStateOf("") }
-    var selectedColor by remember { mutableStateOf(KahonCardPalettes.first().gradientStart.value.toLong()) }
+    var selectedColor by remember { mutableLongStateOf(KahonCardPalettes.first().gradientStart.value.toLong()) }
     var selectedIconKey by remember { mutableStateOf(KahonRoomIcons.keys.first()) }
 
     var isRoomOptionsDialogOpen by remember { mutableStateOf(false) }
@@ -108,7 +108,7 @@ fun RoomScreen(
             placeholder = {
                 Text(
                     modifier = Modifier.clearAndSetSemantics {},
-                    text = "Search rooms or storages…",
+                    text = "Search rooms…",
                     color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)
                 )
             },
@@ -163,7 +163,10 @@ fun RoomScreen(
                                 shape = CircleShape,
                                 color = palette.gradientStart,
                                 modifier = Modifier.size(40.dp),
-                                border = if (selectedColor == colorValue) BorderStroke(2.dp, MaterialTheme.colorScheme.outline) else null
+                                border = if (selectedColor == colorValue) BorderStroke(
+                                    2.dp,
+                                    MaterialTheme.colorScheme.outline
+                                ) else null
                             ) {}
                         }
                     }
@@ -172,7 +175,13 @@ fun RoomScreen(
             confirmButton = {
                 Button(
                     onClick = {
-                        onAction(RoomAction.OnConfirmAddRoom(newRoomName, selectedColor, selectedIconKey))
+                        onAction(
+                            RoomAction.OnConfirmAddRoom(
+                                newRoomName,
+                                selectedColor,
+                                selectedIconKey
+                            )
+                        )
                         isAddRoomDialogOpen = false
                         newRoomName = ""
                     },
@@ -280,7 +289,10 @@ fun RoomScreen(
                                 shape = CircleShape,
                                 color = palette.gradientStart,
                                 modifier = Modifier.size(40.dp),
-                                border = if (selectedColor == colorValue) BorderStroke(2.dp, MaterialTheme.colorScheme.outline) else null
+                                border = if (selectedColor == colorValue) BorderStroke(
+                                    2.dp,
+                                    MaterialTheme.colorScheme.outline
+                                ) else null
                             ) {}
                         }
                     }
@@ -290,7 +302,14 @@ fun RoomScreen(
                 Button(
                     onClick = {
                         selectedRoom?.let {
-                            onAction(RoomAction.OnConfirmEditRoom(it.id, editRoomName, selectedColor, selectedIconKey))
+                            onAction(
+                                RoomAction.OnConfirmEditRoom(
+                                    it.id,
+                                    editRoomName,
+                                    selectedColor,
+                                    selectedIconKey
+                                )
+                            )
                         }
                         isEditRoomDialogOpen = false
                         editRoomName = ""
@@ -386,6 +405,18 @@ fun RoomScreen(
             }
 
             is RoomUiState.Ready -> {
+                val filteredRooms by remember(uiState.roomState.rooms, textFieldState.text) {
+                    derivedStateOf {
+                        val query = textFieldState.text.toString()
+                        if (query.isBlank()) {
+                            uiState.roomState.rooms
+                        } else {
+                            uiState.roomState.rooms.filter {
+                                it.name.contains(query, ignoreCase = true)
+                            }
+                        }
+                    }
+                }
                 Column(
                     modifier = Modifier
                         .fillMaxSize()
@@ -434,7 +465,7 @@ fun RoomScreen(
                         verticalArrangement = Arrangement.spacedBy(14.dp),
                         modifier = Modifier.fillMaxWidth()
                     ) {
-                        items(uiState.roomState.rooms) { room ->
+                        items(filteredRooms) { room ->
                             RoomCard(
                                 name = room.name,
                                 storageCount = room.storageCount,
