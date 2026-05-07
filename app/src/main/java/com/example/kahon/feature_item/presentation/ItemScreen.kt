@@ -284,23 +284,21 @@ fun ItemScreen(
                                 color = MaterialTheme.colorScheme.surface,
                                 modifier = Modifier
                                     .fillMaxWidth()
-                                    .aspectRatio(1f)
-                                    .padding(horizontal = 16.dp),
+                                    .aspectRatio(1f),
                                 shadowElevation = 4.dp,
                                 tonalElevation = 2.dp
                             ) {
                                 Column(
                                     modifier = Modifier
                                         .fillMaxSize()
-                                        .padding(24.dp),
+                                        .padding(12.dp),
                                     horizontalAlignment = Alignment.CenterHorizontally,
                                     verticalArrangement = Arrangement.Center
                                 ) {
                                     Box(
                                         modifier = Modifier
                                             .weight(1f)
-                                            .fillMaxWidth()
-                                            .padding(16.dp),
+                                            .fillMaxWidth(),
                                         contentAlignment = Alignment.Center
                                     ) {
                                         qrBitmap?.let { bitmap ->
