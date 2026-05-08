@@ -138,7 +138,7 @@ fun StorageScreen(
 
                     Text("Select Color", style = MaterialTheme.typography.labelLarge)
                     LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                        items(KahonCardPalettes) { palette ->
+                        items(KahonCardPalettes, key = { it.gradientStart.value }) { palette ->
                             val colorValue = palette.gradientStart.value.toLong()
                             Surface(
                                 onClick = { selectedColor = colorValue },
@@ -234,7 +234,7 @@ fun StorageScreen(
 
                     Text("Select Color", style = MaterialTheme.typography.labelLarge)
                     LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                        items(KahonCardPalettes) { palette ->
+                        items(KahonCardPalettes, key = { it.gradientStart.value }) { palette ->
                             val colorValue = palette.gradientStart.value.toLong()
                             Surface(
                                 onClick = { selectedColor = colorValue },
@@ -400,7 +400,7 @@ fun StorageScreen(
                         Spacer(Modifier.height(16.dp))
                     }
 
-                    items(filteredStorages) { storage ->
+                    items(filteredStorages, key = { it.id }) { storage ->
                         StorageCard(
                             name = storage.name,
                             itemCount = storage.itemCount,

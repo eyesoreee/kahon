@@ -467,7 +467,7 @@ fun ItemScreen(
                                         } else null
                                     )
                                 }
-                                items(uiState.state.categories) { category ->
+                                items(uiState.state.categories, key = { it }) { category ->
                                     FilterChip(
                                         selected = selectedCategory == category,
                                         onClick = {
@@ -515,10 +515,10 @@ fun ItemScreen(
                             }
                         }
                     } else {
-                        itemsIndexed(filteredItems) { index, item ->
+                        itemsIndexed(filteredItems, key = { _, item -> item.id }) { _, item ->
                             ItemCard(
                                 item = item,
-                                palette = KahonCardPalettes[index % KahonCardPalettes.size],
+                                palette = KahonCardPalettes[(item.id % KahonCardPalettes.size).toInt()],
                                 onClick = { onAction(ItemAction.EditItem(item)) }
                             )
                         }

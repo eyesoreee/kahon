@@ -9,7 +9,9 @@ import androidx.compose.material.icons.outlined.Storage
 import androidx.compose.material.icons.outlined.Weekend
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.runtime.Immutable
 
+@Immutable
 data class CardPalette(
     val gradientStart: Color,
     val gradientEnd: Color,

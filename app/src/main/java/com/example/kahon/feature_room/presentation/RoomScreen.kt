@@ -134,7 +134,7 @@ fun RoomScreen(
 
                     Text("Select Icon", style = MaterialTheme.typography.labelLarge)
                     LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                        items(KahonRoomIcons.keys.toList()) { key ->
+                        items(KahonRoomIcons.keys.toList(), key = { it }) { key ->
                             val icon = KahonRoomIcons[key]!!
                             Surface(
                                 onClick = { selectedIconKey = key },
@@ -156,7 +156,7 @@ fun RoomScreen(
 
                     Text("Select Color", style = MaterialTheme.typography.labelLarge)
                     LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                        items(KahonCardPalettes) { palette ->
+                        items(KahonCardPalettes, key = { it.gradientStart.value }) { palette ->
                             val colorValue = palette.gradientStart.value.toLong()
                             Surface(
                                 onClick = { selectedColor = colorValue },
@@ -260,7 +260,7 @@ fun RoomScreen(
 
                     Text("Select Icon", style = MaterialTheme.typography.labelLarge)
                     LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                        items(KahonRoomIcons.keys.toList()) { key ->
+                        items(KahonRoomIcons.keys.toList(), key = { it }) { key ->
                             val icon = KahonRoomIcons[key]!!
                             Surface(
                                 onClick = { selectedIconKey = key },
@@ -282,7 +282,7 @@ fun RoomScreen(
 
                     Text("Select Color", style = MaterialTheme.typography.labelLarge)
                     LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                        items(KahonCardPalettes) { palette ->
+                        items(KahonCardPalettes, key = { it.gradientStart.value }) { palette ->
                             val colorValue = palette.gradientStart.value.toLong()
                             Surface(
                                 onClick = { selectedColor = colorValue },
@@ -465,7 +465,7 @@ fun RoomScreen(
                         verticalArrangement = Arrangement.spacedBy(14.dp),
                         modifier = Modifier.fillMaxWidth()
                     ) {
-                        items(filteredRooms) { room ->
+                        items(filteredRooms, key = { it.id }) { room ->
                             RoomCard(
                                 name = room.name,
                                 storageCount = room.storageCount,

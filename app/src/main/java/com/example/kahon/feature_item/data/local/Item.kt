@@ -1,5 +1,6 @@
 package com.example.kahon.feature_item.data.local
 
+import androidx.compose.runtime.Immutable
 import androidx.room.ColumnInfo
 import androidx.room.Entity
 import androidx.room.ForeignKey
@@ -7,6 +8,7 @@ import androidx.room.Index
 import androidx.room.PrimaryKey
 import com.example.kahon.feature_storage.data.local.Storage
 
+@Immutable
 @Entity(
     tableName = "item",
     foreignKeys = [
