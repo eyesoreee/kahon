@@ -17,15 +17,19 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.itemsIndexed
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.input.rememberTextFieldState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.FilterList
 import androidx.compose.material.icons.filled.QrCode
 import androidx.compose.material.icons.outlined.Download
 import androidx.compose.material.icons.outlined.Share
@@ -33,26 +37,35 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FilterChip
+import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SearchBar
+import androidx.compose.material3.SearchBarDefaults
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.material3.rememberSearchBarState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.produceState
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -87,6 +100,27 @@ fun ItemScreen(
     onAction: (ItemAction) -> Unit,
     onBackClick: () -> Unit
 ) {
+    val searchBarState = rememberSearchBarState()
+    val textFieldState = rememberTextFieldState()
+    val scope = rememberCoroutineScope()
+
+    var selectedCategory by remember { mutableStateOf<String?>(null) }
+
+    val inputField = @Composable {
+        SearchBarDefaults.InputField(
+            textFieldState = textFieldState,
+            searchBarState = searchBarState,
+            onSearch = { scope.launch { searchBarState.animateToCollapsed() } },
+            placeholder = {
+                Text(
+                    modifier = Modifier.clearAndSetSemantics {},
+                    text = "Search items…",
+                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)
+                )
+            },
+        )
+    }
+
     Scaffold(
         modifier = Modifier.fillMaxSize(),
         containerColor = MaterialTheme.colorScheme.background,
@@ -189,6 +223,16 @@ fun ItemScreen(
 
             is ItemUiState.Ready -> {
                 val context = LocalContext.current
+                val filteredItems by remember(uiState.state.items, textFieldState.text, selectedCategory) {
+                    derivedStateOf {
+                        val query = textFieldState.text.toString()
+                        uiState.state.items.filter { item ->
+                            val matchesSearch = item.name.contains(query, ignoreCase = true)
+                            val matchesCategory = selectedCategory == null || item.category == selectedCategory
+                            matchesSearch && matchesCategory
+                        }
+                    }
+                }
                 val scope = rememberCoroutineScope()
                 val deepLinkUrl = remember(uiState.state.roomName, uiState.state.storageName) {
                     val encodedRoom = Uri.encode(uiState.state.roomName)
@@ -387,8 +431,46 @@ fun ItemScreen(
 
                             Spacer(Modifier.height(32.dp))
 
+                            SearchBar(state = searchBarState, inputField = inputField)
+
+                            Spacer(Modifier.height(16.dp))
+
                             Text(
-                                text = "Inside this storage (${uiState.state.items.size})",
+                                text = "Categories",
+                                style = MaterialTheme.typography.labelLarge,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                modifier = Modifier.fillMaxWidth()
+                            )
+                            Spacer(Modifier.height(8.dp))
+                            LazyRow(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                            ) {
+                                item {
+                                    FilterChip(
+                                        selected = selectedCategory == null,
+                                        onClick = { selectedCategory = null },
+                                        label = { Text("All") },
+                                        leadingIcon = if (selectedCategory == null) {
+                                            { Icon(Icons.Default.FilterList, null, Modifier.size(18.dp)) }
+                                        } else null
+                                    )
+                                }
+                                items(uiState.state.categories) { category ->
+                                    FilterChip(
+                                        selected = selectedCategory == category,
+                                        onClick = {
+                                            selectedCategory = if (selectedCategory == category) null else category
+                                        },
+                                        label = { Text(category) }
+                                    )
+                                }
+                            }
+
+                            Spacer(Modifier.height(24.dp))
+
+                            Text(
+                                text = if (selectedCategory == null) "Inside this storage (${filteredItems.size})" else "$selectedCategory (${filteredItems.size})",
                                 style = MaterialTheme.typography.titleLarge.copy(
                                     fontWeight = FontWeight.ExtraBold
                                 ),
@@ -399,7 +481,7 @@ fun ItemScreen(
                         }
                     }
 
-                    if (uiState.state.items.isEmpty()) {
+                    if (filteredItems.isEmpty()) {
                         item(span = { GridItemSpan(2) }) {
                             Column(
                                 modifier = Modifier
@@ -409,19 +491,19 @@ fun ItemScreen(
                                 verticalArrangement = Arrangement.Center
                             ) {
                                 Text(
-                                    text = "Empty Storage",
+                                    text = if (textFieldState.text.isNotEmpty() || selectedCategory != null) "No matches found" else "Empty Storage",
                                     style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
                                     color = MaterialTheme.colorScheme.onSurfaceVariant
                                 )
                                 Text(
-                                    text = "Tap the + button to add items.",
+                                    text = if (textFieldState.text.isNotEmpty() || selectedCategory != null) "Try a different search or filter." else "Tap the + button to add items.",
                                     style = MaterialTheme.typography.bodyMedium,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
                                 )
                             }
                         }
                     } else {
-                        itemsIndexed(uiState.state.items) { index, item ->
+                        itemsIndexed(filteredItems) { index, item ->
                             ItemCard(
                                 item = item,
                                 palette = KahonCardPalettes[index % KahonCardPalettes.size],
