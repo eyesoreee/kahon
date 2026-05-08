@@ -1,12 +1,20 @@
 package com.example.kahon.feature_item.presentation
 
+import android.net.Uri
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.PickVisualMediaRequest
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.aspectRatio
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
@@ -15,9 +23,11 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.AddAPhoto
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.PhotoLibrary
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -37,11 +47,17 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.DialogProperties
+import androidx.core.content.FileProvider
+import coil3.compose.AsyncImage
+import java.io.File
 
 @OptIn(ExperimentalLayoutApi::class, ExperimentalMaterial3Api::class)
 @Composable
@@ -49,15 +65,46 @@ fun AddItemDialog(
     item: com.example.kahon.feature_item.data.local.Item? = null,
     categories: List<String>,
     onDismiss: () -> Unit,
-    onConfirm: (name: String, category: String, quantity: Int) -> Unit,
+    onConfirm: (name: String, category: String, quantity: Int, imagePath: String?) -> Unit,
     onDeleteCategory: (String) -> Unit,
     onDelete: (() -> Unit)? = null
 ) {
     var name by remember(item) { mutableStateOf(item?.name ?: "") }
     var quantity by remember(item) { mutableStateOf(item?.quantity ?: 1) }
     var selectedCategory by remember(item) { mutableStateOf(item?.category ?: "") }
+    var imagePath by remember(item) { mutableStateOf(item?.imagePath) }
     var customCategory by remember { mutableStateOf("") }
     var isAddingCustomCategory by remember { mutableStateOf(false) }
+
+    val context = LocalContext.current
+    var tempCameraUri by remember { mutableStateOf<Uri?>(null) }
+
+    val photoPickerLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.PickVisualMedia()
+    ) { uri ->
+        if (uri != null) {
+            imagePath = uri.toString()
+        }
+    }
+
+    val cameraLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.TakePicture()
+    ) { success ->
+        if (success && tempCameraUri != null) {
+            imagePath = tempCameraUri.toString()
+        }
+    }
+
+    fun launchCamera() {
+        val tempFile = File(context.cacheDir, "temp_image_${System.currentTimeMillis()}.jpg")
+        val uri = FileProvider.getUriForFile(
+            context,
+            "${context.packageName}.provider",
+            tempFile
+        )
+        tempCameraUri = uri
+        cameraLauncher.launch(uri)
+    }
 
     AlertDialog(
         onDismissRequest = onDismiss,
@@ -91,6 +138,92 @@ fun AddItemDialog(
                 modifier = Modifier.fillMaxWidth(),
                 verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .aspectRatio(16f / 9f)
+                        .clip(RoundedCornerShape(16.dp))
+                        .background(MaterialTheme.colorScheme.surfaceVariant),
+                    contentAlignment = Alignment.Center
+                ) {
+                    if (imagePath != null) {
+                        AsyncImage(
+                            model = imagePath,
+                            contentDescription = "Item Image",
+                            modifier = Modifier.fillMaxSize(),
+                            contentScale = ContentScale.Crop
+                        )
+
+                        Row(
+                            modifier = Modifier
+                                .align(Alignment.BottomCenter)
+                                .fillMaxWidth()
+                                .background(MaterialTheme.colorScheme.scrim.copy(alpha = 0.5f))
+                                .padding(8.dp),
+                            horizontalArrangement = Arrangement.SpaceEvenly
+                        ) {
+                            IconButton(onClick = { launchCamera() }) {
+                                Icon(
+                                    Icons.Default.AddAPhoto,
+                                    "Camera",
+                                    tint = MaterialTheme.colorScheme.onPrimary
+                                )
+                            }
+
+                            IconButton(onClick = {
+                                photoPickerLauncher.launch(
+                                    PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)
+                                )
+                            }) {
+                                Icon(
+                                    Icons.Default.PhotoLibrary,
+                                    "Gallery",
+                                    tint = MaterialTheme.colorScheme.onPrimary
+                                )
+                            }
+
+                            IconButton(onClick = { imagePath = null }) {
+                                Icon(
+                                    Icons.Default.Delete,
+                                    "Remove",
+                                    tint = MaterialTheme.colorScheme.error
+                                )
+                            }
+                        }
+                    } else {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceEvenly,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Column(
+                                horizontalAlignment = Alignment.CenterHorizontally,
+                                modifier = Modifier
+                                    .clip(RoundedCornerShape(12.dp))
+                                    .clickable { launchCamera() }
+                                    .padding(16.dp)
+                            ) {
+                                Icon(Icons.Default.AddAPhoto, null, Modifier.size(32.dp))
+                                Text("Camera", style = MaterialTheme.typography.labelMedium)
+                            }
+                            Column(
+                                horizontalAlignment = Alignment.CenterHorizontally,
+                                modifier = Modifier
+                                    .clip(RoundedCornerShape(12.dp))
+                                    .clickable {
+                                        photoPickerLauncher.launch(
+                                            PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)
+                                        )
+                                    }
+                                    .padding(16.dp)
+                            ) {
+                                Icon(Icons.Default.PhotoLibrary, null, Modifier.size(32.dp))
+                                Text("Gallery", style = MaterialTheme.typography.labelMedium)
+                            }
+                        }
+                    }
+                }
+
                 OutlinedTextField(
                     value = name,
                     onValueChange = { name = it },
@@ -124,7 +257,8 @@ fun AddItemDialog(
                         OutlinedTextField(
                             value = quantity.toString(),
                             onValueChange = { newValue ->
-                                newValue.filter { it.isDigit() }.toIntOrNull()?.let { quantity = it }
+                                newValue.filter { it.isDigit() }.toIntOrNull()
+                                    ?.let { quantity = it }
                             },
                             modifier = Modifier.width(80.dp),
                             textStyle = MaterialTheme.typography.bodyLarge.copy(textAlign = TextAlign.Center),
@@ -232,7 +366,7 @@ fun AddItemDialog(
             Button(
                 onClick = {
                     val category = if (isAddingCustomCategory) customCategory else selectedCategory
-                    onConfirm(name, category.ifBlank { "Uncategorized" }, quantity)
+                    onConfirm(name, category.ifBlank { "Uncategorized" }, quantity, imagePath)
                 },
                 enabled = name.isNotBlank(),
                 shape = RoundedCornerShape(50)

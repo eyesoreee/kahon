@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.aspectRatio
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -23,9 +24,11 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import coil3.compose.AsyncImage
 import com.example.kahon.core.ui.CardPalette
 import com.example.kahon.feature_item.data.local.Item
 
@@ -61,12 +64,30 @@ fun ItemCard(
                     .background(palette.gradientStart.copy(alpha = 0.05f)),
                 contentAlignment = Alignment.Center
             ) {
+                if (item.imagePath != null) {
+                    AsyncImage(
+                        model = item.imagePath,
+                        contentDescription = item.name,
+                        modifier = Modifier.fillMaxSize(),
+                        contentScale = ContentScale.Crop
+                    )
+                } else {
+                    Icon(
+                        imageVector = Icons.Outlined.PhotoCamera,
+                        contentDescription = null,
+                        modifier = Modifier.size(40.dp),
+                        tint = palette.gradientStart.copy(alpha = 0.2f)
+                    )
+                }
+
                 Surface(
                     modifier = Modifier
                         .align(Alignment.TopEnd)
                         .padding(8.dp),
                     shape = RoundedCornerShape(50),
-                    color = palette.gradientStart.copy(alpha = 0.1f)
+                    color = (if (item.imagePath != null) MaterialTheme.colorScheme.surface else palette.gradientStart).copy(
+                        alpha = 0.8f
+                    )
                 ) {
                     Icon(
                         imageVector = Icons.Outlined.PhotoCamera,
@@ -74,16 +95,9 @@ fun ItemCard(
                         modifier = Modifier
                             .padding(4.dp)
                             .size(16.dp),
-                        tint = palette.gradientStart
+                        tint = if (item.imagePath != null) MaterialTheme.colorScheme.primary else palette.gradientStart
                     )
                 }
-
-                Icon(
-                    imageVector = Icons.Outlined.PhotoCamera,
-                    contentDescription = null,
-                    modifier = Modifier.size(40.dp),
-                    tint = palette.gradientStart.copy(alpha = 0.2f)
-                )
             }
 
             Column(

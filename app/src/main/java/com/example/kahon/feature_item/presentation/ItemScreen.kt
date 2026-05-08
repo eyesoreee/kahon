@@ -38,7 +38,6 @@ import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
-import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -223,12 +222,17 @@ fun ItemScreen(
 
             is ItemUiState.Ready -> {
                 val context = LocalContext.current
-                val filteredItems by remember(uiState.state.items, textFieldState.text, selectedCategory) {
+                val filteredItems by remember(
+                    uiState.state.items,
+                    textFieldState.text,
+                    selectedCategory
+                ) {
                     derivedStateOf {
                         val query = textFieldState.text.toString()
                         uiState.state.items.filter { item ->
                             val matchesSearch = item.name.contains(query, ignoreCase = true)
-                            val matchesCategory = selectedCategory == null || item.category == selectedCategory
+                            val matchesCategory =
+                                selectedCategory == null || item.category == selectedCategory
                             matchesSearch && matchesCategory
                         }
                     }
@@ -257,8 +261,8 @@ fun ItemScreen(
                     AddItemDialog(
                         categories = uiState.state.categories,
                         onDismiss = { onAction(ItemAction.DismissDialog) },
-                        onConfirm = { name, category, quantity ->
-                            onAction(ItemAction.AddItem(name, category, quantity))
+                        onConfirm = { name, category, quantity, imagePath ->
+                            onAction(ItemAction.AddItem(name, category, quantity, imagePath))
                         },
                         onDeleteCategory = { category ->
                             onAction(ItemAction.DeleteCategory(category))
@@ -271,13 +275,14 @@ fun ItemScreen(
                         item = uiState.state.editingItem,
                         categories = uiState.state.categories,
                         onDismiss = { onAction(ItemAction.DismissDialog) },
-                        onConfirm = { name, category, quantity ->
+                        onConfirm = { name, category, quantity, imagePath ->
                             onAction(
                                 ItemAction.UpdateItem(
                                     uiState.state.editingItem.copy(
                                         name = name,
                                         category = category,
-                                        quantity = quantity
+                                        quantity = quantity,
+                                        imagePath = imagePath
                                     )
                                 )
                             )
@@ -452,7 +457,13 @@ fun ItemScreen(
                                         onClick = { selectedCategory = null },
                                         label = { Text("All") },
                                         leadingIcon = if (selectedCategory == null) {
-                                            { Icon(Icons.Default.FilterList, null, Modifier.size(18.dp)) }
+                                            {
+                                                Icon(
+                                                    Icons.Default.FilterList,
+                                                    null,
+                                                    Modifier.size(18.dp)
+                                                )
+                                            }
                                         } else null
                                     )
                                 }
@@ -460,7 +471,8 @@ fun ItemScreen(
                                     FilterChip(
                                         selected = selectedCategory == category,
                                         onClick = {
-                                            selectedCategory = if (selectedCategory == category) null else category
+                                            selectedCategory =
+                                                if (selectedCategory == category) null else category
                                         },
                                         label = { Text(category) }
                                     )

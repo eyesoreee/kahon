@@ -1,5 +1,7 @@
 package com.example.kahon.feature_item.presentation
 
+import android.app.Application
+import androidx.core.net.toUri
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -10,15 +12,19 @@ import com.example.kahon.feature_item.domain.repository.ItemRepository
 import com.example.kahon.feature_room.domain.repository.RoomRepository
 import com.example.kahon.feature_storage.domain.repository.StorageRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import java.io.File
 import javax.inject.Inject
 
 @HiltViewModel
 class ItemViewModel @Inject constructor(
+    private val application: Application,
     savedStateHandle: SavedStateHandle,
     private val storageRepository: StorageRepository,
     private val roomRepository: RoomRepository,
@@ -63,11 +69,15 @@ class ItemViewModel @Inject constructor(
             is ItemAction.AddItem -> {
                 val sId = storageId ?: return
                 viewModelScope.launch {
+                    val savedImagePath = action.imagePath?.let { uriString ->
+                        saveImageToInternalStorage(uriString)
+                    }
                     val newItem = Item(
                         name = action.name,
                         category = action.category,
                         storageId = sId,
-                        quantity = action.quantity
+                        quantity = action.quantity,
+                        imagePath = savedImagePath
                     )
                     itemRepository.insertItem(newItem)
                     loadData()
@@ -85,7 +95,13 @@ class ItemViewModel @Inject constructor(
 
             is ItemAction.UpdateItem -> {
                 viewModelScope.launch {
-                    itemRepository.updateItem(action.item)
+                    val finalItem = if (action.item.imagePath?.startsWith("content://") == true) {
+                        val savedPath = saveImageToInternalStorage(action.item.imagePath!!)
+                        action.item.copy(imagePath = savedPath)
+                    } else {
+                        action.item
+                    }
+                    itemRepository.updateItem(finalItem)
                     loadData()
                     onAction(ItemAction.DismissDialog)
                 }
@@ -104,6 +120,28 @@ class ItemViewModel @Inject constructor(
                     itemRepository.clearCategory(action.category)
                     loadData()
                 }
+            }
+        }
+    }
+
+    private suspend fun saveImageToInternalStorage(uriString: String): String? {
+        if (!uriString.startsWith("content://")) return uriString
+
+        return withContext(Dispatchers.IO) {
+            try {
+                val uri = uriString.toUri()
+                val inputStream = application.contentResolver.openInputStream(uri)
+                val fileName = "item_${System.currentTimeMillis()}.jpg"
+                val file = File(application.filesDir, fileName)
+                inputStream?.use { input ->
+                    file.outputStream().use { output ->
+                        input.copyTo(output)
+                    }
+                }
+                file.absolutePath
+            } catch (e: Exception) {
+                e.printStackTrace()
+                null
             }
         }
     }
