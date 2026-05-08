@@ -2,9 +2,10 @@ package com.example.kahon.feature_storage.domain.repository
 
 import com.example.kahon.feature_storage.data.local.Storage
 import com.example.kahon.feature_storage.domain.model.StorageWithCount
+import kotlinx.coroutines.flow.Flow
 
 interface StorageRepository {
-    suspend fun getStorages(roomId: Long): List<StorageWithCount>
+    fun getStorages(roomId: Long): Flow<List<StorageWithCount>>
     suspend fun insertStorage(storage: Storage)
     suspend fun deleteStorage(id: Long)
     suspend fun updateStorage(storage: Storage)

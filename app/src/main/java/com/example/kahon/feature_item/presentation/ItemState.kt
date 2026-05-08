@@ -9,6 +9,4 @@ data class ItemState(
     val roomName: String = "",
     val items: List<Item> = emptyList(),
     val categories: List<String> = listOf("Electronics", "Clothing", "Kitchen", "Tools", "Office"),
-    val isAddingItem: Boolean = false,
-    val editingItem: Item? = null
 )

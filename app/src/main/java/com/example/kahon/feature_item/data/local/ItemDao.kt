@@ -5,14 +5,15 @@ import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import androidx.room.Update
+import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface ItemDao {
     @Query("SELECT * FROM item WHERE storageId = :storageId")
-    suspend fun getItems(storageId: Long): List<Item>
+    fun getItems(storageId: Long): Flow<List<Item>>
 
     @Query("SELECT DISTINCT category FROM item")
-    suspend fun getAllCategories(): List<String>
+    fun getAllCategories(): Flow<List<String>>
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertItem(item: Item)

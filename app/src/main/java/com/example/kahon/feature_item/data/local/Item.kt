@@ -16,7 +16,7 @@ import com.example.kahon.feature_storage.data.local.Storage
             entity = Storage::class,
             parentColumns = ["id"],
             childColumns = ["storageId"],
-            onDelete = ForeignKey.RESTRICT
+            onDelete = ForeignKey.CASCADE
         )
     ],
     indices = [Index(value = ["storageId"])]

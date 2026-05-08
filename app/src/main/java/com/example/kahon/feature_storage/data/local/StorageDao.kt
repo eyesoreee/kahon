@@ -6,6 +6,7 @@ import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import androidx.room.Update
 import com.example.kahon.feature_storage.domain.model.StorageWithCount
+import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface StorageDao {
@@ -20,7 +21,7 @@ interface StorageDao {
         WHERE storage.roomId = :roomId
         GROUP BY storage.id
     """)
-    suspend fun getStoragesWithCount(roomId: Long): List<StorageWithCount>
+    fun getStoragesWithCount(roomId: Long): Flow<List<StorageWithCount>>
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertStorage(storage: Storage)

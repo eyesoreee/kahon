@@ -3,16 +3,17 @@ package com.example.kahon.feature_item.data.repository
 import com.example.kahon.feature_item.data.local.Item
 import com.example.kahon.feature_item.data.local.ItemDao
 import com.example.kahon.feature_item.domain.repository.ItemRepository
+import kotlinx.coroutines.flow.Flow
 import javax.inject.Inject
 
 class ItemRepositoryImp @Inject constructor(
     private val itemDao: ItemDao
 ) : ItemRepository {
-    override suspend fun getItems(storageId: Long): List<Item> {
+    override fun getItems(storageId: Long): Flow<List<Item>> {
         return itemDao.getItems(storageId)
     }
 
-    override suspend fun getAllCategories(): List<String> {
+    override fun getAllCategories(): Flow<List<String>> {
         return itemDao.getAllCategories()
     }
 

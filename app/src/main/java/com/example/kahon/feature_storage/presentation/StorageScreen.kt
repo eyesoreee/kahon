@@ -21,9 +21,11 @@ import androidx.compose.foundation.text.input.rememberTextFieldState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material.icons.outlined.Inventory2
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
@@ -62,8 +64,6 @@ import com.example.kahon.core.ui.toCardPalette
 import com.example.kahon.feature_storage.domain.model.StorageWithCount
 import kotlinx.coroutines.launch
 
-private val cardPalettes = KahonCardPalettes
-
 @Composable
 fun StorageRoot(
     viewModel: StorageViewModel = hiltViewModel(),
@@ -99,6 +99,7 @@ fun StorageScreen(
     var selectedColor by remember { mutableLongStateOf(KahonCardPalettes.first().gradientStart.value.toLong()) }
 
     var isStorageOptionsDialogOpen by remember { mutableStateOf(false) }
+    var isDeleteWarningDialogOpen by remember { mutableStateOf(false) }
     var selectedStorage by remember { mutableStateOf<StorageWithCount?>(null) }
 
     var isEditStorageDialogOpen by remember { mutableStateOf(false) }
@@ -138,7 +139,7 @@ fun StorageScreen(
 
                     Text("Select Color", style = MaterialTheme.typography.labelLarge)
                     LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                        items(KahonCardPalettes, key = { it.gradientStart.value }) { palette ->
+                        items(KahonCardPalettes, key = { it.gradientStart.value.toLong() }) { palette ->
                             val colorValue = palette.gradientStart.value.toLong()
                             Surface(
                                 onClick = { selectedColor = colorValue },
@@ -201,14 +202,53 @@ fun StorageScreen(
             dismissButton = {
                 TextButton(
                     onClick = {
-                        selectedStorage?.let {
-                            onAction(StorageAction.OnDeleteStorage(it.id))
+                        if ((selectedStorage?.itemCount ?: 0) > 0) {
+                            isDeleteWarningDialogOpen = true
+                            isStorageOptionsDialogOpen = false
+                        } else {
+                            selectedStorage?.let { onAction(StorageAction.OnDeleteStorage(it.id)) }
+                            isStorageOptionsDialogOpen = false
+                            selectedStorage = null
                         }
-                        isStorageOptionsDialogOpen = false
-                        selectedStorage = null
                     }
                 ) {
                     Text("Delete", color = MaterialTheme.colorScheme.error)
+                }
+            }
+        )
+    }
+
+    if (isDeleteWarningDialogOpen && selectedStorage != null) {
+        AlertDialog(
+            onDismissRequest = {
+                isDeleteWarningDialogOpen = false
+                selectedStorage = null
+            },
+            icon = { Icon(Icons.Default.Warning, contentDescription = null, tint = MaterialTheme.colorScheme.error) },
+            title = { Text(text = "Delete Storage?") },
+            text = {
+                Text(
+                    text = "This storage contains ${selectedStorage?.itemCount} items. Deleting it will permanently remove everything inside. This cannot be undone."
+                )
+            },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        selectedStorage?.let { onAction(StorageAction.OnDeleteStorage(it.id)) }
+                        isDeleteWarningDialogOpen = false
+                        selectedStorage = null
+                    },
+                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error)
+                ) {
+                    Text("Delete Everything")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = {
+                    isDeleteWarningDialogOpen = false
+                    selectedStorage = null
+                }) {
+                    Text("Cancel")
                 }
             }
         )
@@ -234,7 +274,7 @@ fun StorageScreen(
 
                     Text("Select Color", style = MaterialTheme.typography.labelLarge)
                     LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                        items(KahonCardPalettes, key = { it.gradientStart.value }) { palette ->
+                        items(KahonCardPalettes, key = { it.gradientStart.value.toLong() }) { palette ->
                             val colorValue = palette.gradientStart.value.toLong()
                             Surface(
                                 onClick = { selectedColor = colorValue },

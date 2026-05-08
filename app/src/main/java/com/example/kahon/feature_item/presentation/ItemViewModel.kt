@@ -13,10 +13,13 @@ import com.example.kahon.feature_room.domain.repository.RoomRepository
 import com.example.kahon.feature_storage.domain.repository.StorageRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.flow.catch
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.emitAll
+import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.io.File
@@ -36,97 +39,101 @@ class ItemViewModel @Inject constructor(
 
     private var storageId: Long? = null
 
-    private val _uiState = MutableStateFlow<ItemUiState>(ItemUiState.Loading)
-    val uiState: StateFlow<ItemUiState> = _uiState.asStateFlow()
+    val uiState: StateFlow<ItemUiState> = flow {
+        if (!roomRepository.doesRoomExist(roomName)) {
+            emit(ItemUiState.Error("Room '$roomName' not found."))
+            return@flow
+        }
 
-    init {
-        loadData()
+        val sId = storageRepository.getStorageId(roomName, storageName)
+        if (sId == null) {
+            emit(ItemUiState.Error("Storage '$storageName' not found."))
+            return@flow
+        }
+
+        storageId = sId
+        emitAll(
+            combine(
+                itemRepository.getItems(sId),
+                itemRepository.getAllCategories()
+            ) { items, categoriesFromDb ->
+                val allCategories = (listOf(
+                    "Electronics", "Clothing", "Kitchen", "Tools", "Office"
+                ) + categoriesFromDb).distinct().sorted()
+
+                ItemUiState.Ready(
+                    state = ItemState(
+                        storageName = storageName,
+                        roomName = roomName,
+                        items = items,
+                        categories = allCategories
+                    )
+                )
+            }
+        )
     }
+        .catch { e -> emit(ItemUiState.Error(e.localizedMessage)) }
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), ItemUiState.Loading)
+
 
     fun onAction(action: ItemAction) {
         when (action) {
-            ItemAction.ShowAddItemDialog -> {
-                _uiState.update { state ->
-                    if (state is ItemUiState.Ready) {
-                        state.copy(state = state.state.copy(isAddingItem = true))
-                    } else state
-                }
-            }
+            is ItemAction.AddItem -> onAddItem(
+                action.name,
+                action.category,
+                action.quantity,
+                action.imagePath
+            )
 
-            ItemAction.DismissDialog -> {
-                _uiState.update { state ->
-                    if (state is ItemUiState.Ready) {
-                        state.copy(
-                            state = state.state.copy(
-                                isAddingItem = false,
-                                editingItem = null
-                            )
-                        )
-                    } else state
-                }
-            }
+            is ItemAction.UpdateItem -> onUpdateItem(action.item)
+            is ItemAction.DeleteItem -> onDeleteItem(action.item)
+            is ItemAction.DeleteCategory -> onDeleteCategory(action.category)
+            else -> Unit
+        }
+    }
 
-            is ItemAction.AddItem -> {
-                val sId = storageId ?: return
-                viewModelScope.launch {
-                    val savedImagePath = action.imagePath?.let { uriString ->
-                        saveImageToInternalStorage(uriString)
-                    }
-                    val newItem = Item(
-                        name = action.name,
-                        category = action.category,
-                        storageId = sId,
-                        quantity = action.quantity,
-                        imagePath = savedImagePath
-                    )
-                    itemRepository.insertItem(newItem)
-                    loadData()
-                    onAction(ItemAction.DismissDialog)
-                }
-            }
+    private fun onAddItem(name: String, category: String, quantity: Int, imagePath: String?) {
+        val sId = storageId ?: return
+        viewModelScope.launch {
+            val savedImagePath = imagePath?.let { saveImageToInternalStorage(it) }
+            itemRepository.insertItem(
+                Item(
+                    name = name,
+                    category = category,
+                    storageId = sId,
+                    quantity = quantity,
+                    imagePath = savedImagePath
+                )
+            )
+        }
+    }
 
-            is ItemAction.EditItem -> {
-                _uiState.update { state ->
-                    if (state is ItemUiState.Ready) {
-                        state.copy(state = state.state.copy(editingItem = action.item))
-                    } else state
-                }
+    private fun onUpdateItem(item: Item) {
+        viewModelScope.launch {
+            val finalItem = if (item.imagePath?.startsWith("content://") == true) {
+                val savedPath = saveImageToInternalStorage(item.imagePath)
+                item.copy(imagePath = savedPath)
+            } else {
+                item
             }
+            itemRepository.updateItem(finalItem)
+        }
+    }
 
-            is ItemAction.UpdateItem -> {
-                viewModelScope.launch {
-                    val finalItem = if (action.item.imagePath?.startsWith("content://") == true) {
-                        val savedPath = saveImageToInternalStorage(action.item.imagePath!!)
-                        action.item.copy(imagePath = savedPath)
-                    } else {
-                        action.item
-                    }
-                    itemRepository.updateItem(finalItem)
-                    loadData()
-                    onAction(ItemAction.DismissDialog)
-                }
-            }
+    private fun onDeleteItem(item: Item) {
+        viewModelScope.launch {
+            itemRepository.deleteItem(item.id)
+        }
+    }
 
-            is ItemAction.DeleteItem -> {
-                viewModelScope.launch {
-                    itemRepository.deleteItem(action.item.id)
-                    loadData()
-                    onAction(ItemAction.DismissDialog)
-                }
-            }
-
-            is ItemAction.DeleteCategory -> {
-                viewModelScope.launch {
-                    itemRepository.clearCategory(action.category)
-                    loadData()
-                }
-            }
+    private fun onDeleteCategory(category: String) {
+        viewModelScope.launch {
+            itemRepository.clearCategory(category)
         }
     }
 
     private suspend fun saveImageToInternalStorage(uriString: String): String? {
         if (!uriString.startsWith("content://")) return uriString
-
         return withContext(Dispatchers.IO) {
             try {
                 val uri = uriString.toUri()
@@ -143,42 +150,6 @@ class ItemViewModel @Inject constructor(
                 e.printStackTrace()
                 null
             }
-        }
-    }
-
-    private fun loadData() {
-        viewModelScope.launch {
-            val roomExists = roomRepository.doesRoomExist(roomName)
-            if (!roomExists) {
-                _uiState.value = ItemUiState.Error(
-                    "The room '$roomName' was not found."
-                )
-                return@launch
-            }
-
-            val sId = storageRepository.getStorageId(roomName, storageName)
-            if (sId == null) {
-                _uiState.value = ItemUiState.Error(
-                    "The storage '$storageName' was not found in '$roomName'."
-                )
-                return@launch
-            }
-            storageId = sId
-
-            val items = itemRepository.getItems(sId)
-            val categoriesFromDb = itemRepository.getAllCategories()
-
-            val defaultCategories = listOf("Electronics", "Clothing", "Kitchen", "Tools", "Office")
-            val allCategories = (defaultCategories + categoriesFromDb).distinct().sorted()
-
-            _uiState.value = ItemUiState.Ready(
-                state = ItemState(
-                    storageName = storageName,
-                    roomName = roomName,
-                    items = items,
-                    categories = allCategories
-                )
-            )
         }
     }
 }

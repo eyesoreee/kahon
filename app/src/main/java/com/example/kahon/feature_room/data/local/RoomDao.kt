@@ -5,6 +5,7 @@ import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import com.example.kahon.feature_room.domain.model.RoomWithCount
+import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface RoomDao {
@@ -21,7 +22,7 @@ interface RoomDao {
         GROUP BY room.id
     """
     )
-    suspend fun getRoomsWithCount(): List<RoomWithCount>
+    fun getRoomsWithCount(): Flow<List<RoomWithCount>>
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertRoom(room: Room)

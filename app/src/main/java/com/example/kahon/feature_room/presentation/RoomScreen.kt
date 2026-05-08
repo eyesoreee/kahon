@@ -22,9 +22,11 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.input.rememberTextFieldState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material.icons.outlined.Settings
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
@@ -95,6 +97,7 @@ fun RoomScreen(
     var selectedIconKey by remember { mutableStateOf(KahonRoomIcons.keys.first()) }
 
     var isRoomOptionsDialogOpen by remember { mutableStateOf(false) }
+    var isDeleteWarningDialogOpen by remember { mutableStateOf(false) }
     var selectedRoom by remember { mutableStateOf<RoomWithCount?>(null) }
 
     var isEditRoomDialogOpen by remember { mutableStateOf(false) }
@@ -156,7 +159,7 @@ fun RoomScreen(
 
                     Text("Select Color", style = MaterialTheme.typography.labelLarge)
                     LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                        items(KahonCardPalettes, key = { it.gradientStart.value }) { palette ->
+                        items(KahonCardPalettes, key = { it.gradientStart.value.toLong() }) { palette ->
                             val colorValue = palette.gradientStart.value.toLong()
                             Surface(
                                 onClick = { selectedColor = colorValue },
@@ -227,14 +230,53 @@ fun RoomScreen(
             dismissButton = {
                 TextButton(
                     onClick = {
-                        selectedRoom?.let {
-                            onAction(RoomAction.OnDeleteRoom(it.id))
+                        if ((selectedRoom?.storageCount ?: 0) > 0) {
+                            isDeleteWarningDialogOpen = true
+                            isRoomOptionsDialogOpen = false
+                        } else {
+                            selectedRoom?.let { onAction(RoomAction.OnDeleteRoom(it.id)) }
+                            isRoomOptionsDialogOpen = false
+                            selectedRoom = null
                         }
-                        isRoomOptionsDialogOpen = false
-                        selectedRoom = null
                     }
                 ) {
                     Text("Delete", color = MaterialTheme.colorScheme.error)
+                }
+            }
+        )
+    }
+
+    if (isDeleteWarningDialogOpen && selectedRoom != null) {
+        AlertDialog(
+            onDismissRequest = {
+                isDeleteWarningDialogOpen = false
+                selectedRoom = null
+            },
+            icon = { Icon(Icons.Default.Warning, contentDescription = null, tint = MaterialTheme.colorScheme.error) },
+            title = { Text(text = "Delete Room?") },
+            text = {
+                Text(
+                    text = "This room contains ${selectedRoom?.storageCount} storages. Deleting it will permanently remove everything inside. This cannot be undone."
+                )
+            },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        selectedRoom?.let { onAction(RoomAction.OnDeleteRoom(it.id)) }
+                        isDeleteWarningDialogOpen = false
+                        selectedRoom = null
+                    },
+                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error)
+                ) {
+                    Text("Delete Everything")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = {
+                    isDeleteWarningDialogOpen = false
+                    selectedRoom = null
+                }) {
+                    Text("Cancel")
                 }
             }
         )
@@ -282,7 +324,7 @@ fun RoomScreen(
 
                     Text("Select Color", style = MaterialTheme.typography.labelLarge)
                     LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                        items(KahonCardPalettes, key = { it.gradientStart.value }) { palette ->
+                        items(KahonCardPalettes, key = { it.gradientStart.value.toLong() }) { palette ->
                             val colorValue = palette.gradientStart.value.toLong()
                             Surface(
                                 onClick = { selectedColor = colorValue },

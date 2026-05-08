@@ -4,12 +4,13 @@ import com.example.kahon.feature_storage.data.local.Storage
 import com.example.kahon.feature_storage.data.local.StorageDao
 import com.example.kahon.feature_storage.domain.model.StorageWithCount
 import com.example.kahon.feature_storage.domain.repository.StorageRepository
+import kotlinx.coroutines.flow.Flow
 import javax.inject.Inject
 
 class StorageRepositoryImp @Inject constructor(
     private val storageDao: StorageDao
 ) : StorageRepository {
-    override suspend fun getStorages(roomId: Long): List<StorageWithCount> {
+    override fun getStorages(roomId: Long): Flow<List<StorageWithCount>> {
         return storageDao.getStoragesWithCount(roomId)
     }
 

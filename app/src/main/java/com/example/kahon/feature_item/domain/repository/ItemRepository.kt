@@ -1,10 +1,11 @@
 package com.example.kahon.feature_item.domain.repository
 
 import com.example.kahon.feature_item.data.local.Item
+import kotlinx.coroutines.flow.Flow
 
 interface ItemRepository {
-    suspend fun getItems(storageId: Long): List<Item>
-    suspend fun getAllCategories(): List<String>
+    fun getItems(storageId: Long): Flow<List<Item>>
+    fun getAllCategories(): Flow<List<String>>
     suspend fun insertItem(item: Item)
     suspend fun deleteItem(id: Long)
     suspend fun updateItem(item: Item)

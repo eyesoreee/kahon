@@ -31,8 +31,10 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.FilterList
 import androidx.compose.material.icons.filled.QrCode
+import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material.icons.outlined.Download
 import androidx.compose.material.icons.outlined.Share
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
@@ -47,6 +49,7 @@ import androidx.compose.material3.SearchBar
 import androidx.compose.material3.SearchBarDefaults
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.rememberSearchBarState
@@ -74,6 +77,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.kahon.core.ui.KahonCardPalettes
 import com.example.kahon.core.util.QrCodeGenerator
 import com.example.kahon.core.util.ShareUtils
+import com.example.kahon.feature_item.data.local.Item
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -104,6 +108,9 @@ fun ItemScreen(
     val scope = rememberCoroutineScope()
 
     var selectedCategory by remember { mutableStateOf<String?>(null) }
+    var isAddingItem by remember { mutableStateOf(false) }
+    var editingItem by remember { mutableStateOf<Item?>(null) }
+    var itemToDelete by remember { mutableStateOf<Item?>(null) }
 
     val inputField = @Composable {
         SearchBarDefaults.InputField(
@@ -117,6 +124,32 @@ fun ItemScreen(
                     color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)
                 )
             },
+        )
+    }
+
+    if (itemToDelete != null) {
+        AlertDialog(
+            onDismissRequest = { itemToDelete = null },
+            icon = { Icon(Icons.Default.Warning, contentDescription = null, tint = MaterialTheme.colorScheme.error) },
+            title = { Text(text = "Delete Item?") },
+            text = { Text("Are you sure you want to delete \"${itemToDelete?.name}\"? This cannot be undone.") },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        itemToDelete?.let { onAction(ItemAction.DeleteItem(it)) }
+                        itemToDelete = null
+                        editingItem = null
+                    },
+                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error)
+                ) {
+                    Text("Delete")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { itemToDelete = null }) {
+                    Text("Cancel")
+                }
+            }
         )
     }
 
@@ -160,7 +193,7 @@ fun ItemScreen(
         floatingActionButton = {
             if (uiState is ItemUiState.Ready) {
                 FloatingActionButton(
-                    onClick = { onAction(ItemAction.ShowAddItemDialog) },
+                    onClick = { isAddingItem = true },
                     containerColor = MaterialTheme.colorScheme.primary,
                     contentColor = MaterialTheme.colorScheme.onPrimary,
                     shape = CircleShape
@@ -257,12 +290,13 @@ fun ItemScreen(
                     }
                 }
 
-                if (uiState.state.isAddingItem) {
+                if (isAddingItem) {
                     AddItemDialog(
                         categories = uiState.state.categories,
-                        onDismiss = { onAction(ItemAction.DismissDialog) },
+                        onDismiss = { isAddingItem = false },
                         onConfirm = { name, category, quantity, imagePath ->
                             onAction(ItemAction.AddItem(name, category, quantity, imagePath))
+                            isAddingItem = false
                         },
                         onDeleteCategory = { category ->
                             onAction(ItemAction.DeleteCategory(category))
@@ -270,15 +304,15 @@ fun ItemScreen(
                     )
                 }
 
-                if (uiState.state.editingItem != null) {
+                editingItem?.let { item ->
                     AddItemDialog(
-                        item = uiState.state.editingItem,
+                        item = item,
                         categories = uiState.state.categories,
-                        onDismiss = { onAction(ItemAction.DismissDialog) },
+                        onDismiss = { editingItem = null },
                         onConfirm = { name, category, quantity, imagePath ->
                             onAction(
                                 ItemAction.UpdateItem(
-                                    uiState.state.editingItem.copy(
+                                    item.copy(
                                         name = name,
                                         category = category,
                                         quantity = quantity,
@@ -286,12 +320,13 @@ fun ItemScreen(
                                     )
                                 )
                             )
+                            editingItem = null
                         },
                         onDeleteCategory = { category ->
                             onAction(ItemAction.DeleteCategory(category))
                         },
                         onDelete = {
-                            onAction(ItemAction.DeleteItem(uiState.state.editingItem))
+                            itemToDelete = item
                         }
                     )
                 }
@@ -519,7 +554,7 @@ fun ItemScreen(
                             ItemCard(
                                 item = item,
                                 palette = KahonCardPalettes[(item.id % KahonCardPalettes.size).toInt()],
-                                onClick = { onAction(ItemAction.EditItem(item)) }
+                                onClick = { editingItem = item }
                             )
                         }
                     }

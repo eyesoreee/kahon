@@ -14,7 +14,7 @@ import com.example.kahon.feature_room.data.local.Room
             entity = Room::class,
             parentColumns = ["id"],
             childColumns = ["roomId"],
-            onDelete = ForeignKey.RESTRICT
+            onDelete = ForeignKey.CASCADE
         )
     ],
     indices = [Index(value = ["roomId"])]

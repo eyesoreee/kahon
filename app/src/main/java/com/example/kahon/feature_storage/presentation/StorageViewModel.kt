@@ -6,11 +6,14 @@ import androidx.lifecycle.viewModelScope
 import androidx.navigation.toRoute
 import com.example.kahon.core.navigation.StorageRoute
 import com.example.kahon.feature_storage.data.local.Storage
+import com.example.kahon.feature_storage.domain.model.StorageWithCount
 import com.example.kahon.feature_storage.domain.repository.StorageRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.catch
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -23,34 +26,28 @@ class StorageViewModel @Inject constructor(
     private val roomId = routeData.roomId.toLong()
     val roomName = routeData.roomName
 
-    private val _uiState = MutableStateFlow<StorageUiState>(StorageUiState.Loading)
-    val uiState: StateFlow<StorageUiState> = _uiState.asStateFlow()
-
-    init {
-        loadStorages()
-    }
+    val uiState: StateFlow<StorageUiState> = storageRepository.getStorages(roomId)
+        .map<List<StorageWithCount>, StorageUiState> { storages ->
+            StorageUiState.Ready(
+                storageState = StorageState(
+                    storages = storages
+                )
+            )
+        }
+        .catch { e ->
+            emit(StorageUiState.Error(e.localizedMessage ?: "An unexpected error occurred"))
+        }
+        .stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5000),
+            initialValue = StorageUiState.Loading
+        )
 
     fun onAction(action: StorageAction) {
         when (action) {
             is StorageAction.OnConfirmAddStorage -> onConfirmAddStorage(action.name, action.color)
             is StorageAction.OnDeleteStorage -> onDeleteStorage(action.id)
             is StorageAction.OnConfirmEditStorage -> onConfirmEditStorage(action.id, action.newName, action.newColor)
-        }
-    }
-
-    private fun loadStorages() {
-        _uiState.value = StorageUiState.Loading
-        viewModelScope.launch {
-            try {
-                val storages = storageRepository.getStorages(roomId)
-                _uiState.value = StorageUiState.Ready(
-                    storageState = StorageState(
-                        storages = storages
-                    )
-                )
-            } catch (e: Exception) {
-                _uiState.value = StorageUiState.Error(e.message)
-            }
         }
     }
 
@@ -65,14 +62,12 @@ class StorageViewModel @Inject constructor(
                     color = color
                 )
             )
-            loadStorages()
         }
     }
 
     private fun onDeleteStorage(id: Long) {
         viewModelScope.launch {
             storageRepository.deleteStorage(id)
-            loadStorages()
         }
     }
 
@@ -88,7 +83,6 @@ class StorageViewModel @Inject constructor(
                     color = newColor
                 )
             )
-            loadStorages()
         }
     }
 }
