@@ -1,28 +1,32 @@
-# Kahon - Organize Your Space
+# Kahon - Smart Home Inventory with QR Codes
 
-Kahon (Tagalog for "box") is a simple, intuitive Android app designed to help you keep track of your belongings by organizing them into a clear hierarchy of rooms and storages.
+**Kahon** (Tagalog for "box") is more than just a list-maker; it's a bridge between your physical storage and your digital inventory. By using **QR Codes**, Kahon turns every box, shelf, and cabinet into a smart container.
 
-## 📦 What is Kahon?
+## 🚀 The Core Workflow: Print, Stick, Scan
 
-Ever forgotten which box in the attic holds your holiday decorations, or which cabinet has the spare lightbulbs? Kahon solves this by letting you digitalize your physical storage. It follows a simple structure:
-**Room** → **Storage** → **Items**
+The heart of Kahon is its seamless integration with the physical world:
+
+1.  **Organize**: Create a digital representation of your rooms and storage units.
+2.  **Generate**: Instantly generate a unique QR code for any storage box or cabinet.
+3.  **Print & Stick**: Export the QR code, print it, and stick it onto the physical box.
+4.  **Scan**: Next time you need to know what's inside, just scan the code with your phone to instantly see the list of items without even opening the lid.
 
 ## ✨ Key Features
 
-- **Hierarchical Organization**: Categorize your items by the room they are in and the specific storage unit (shelf, box, cabinet) they occupy.
-- **Fast Search**: Quickly find any item across all rooms and storages with a powerful search tool.
-- **Backup & Restore**: Export your entire database to a file and restore it whenever needed, ensuring your data is always safe.
-- **Material 3 Design**: A clean, modern interface built with Jetpack Compose that supports Light, Dark, and System themes.
-- **Privacy First**: All data is stored locally on your device using a Room database. No cloud, no tracking.
+- **QR-Powered Inventory**: Every storage unit (shelf, box, bin) gets a unique identity. Generate, save to gallery, or share QR codes for easy printing.
+- **Deep-Link Integration**: Scanning a Kahon QR code takes you directly to that storage unit's item list within the app.
+- **Hierarchical Structure**: Keep things tidy with a simple **Room** → **Storage** → **Items** organization.
+- **Visual Search**: Quickly find where an item is hidden across all your rooms and containers.
+- **Backup & Restore**: Your data stays yours. Export your database for safekeeping or migration.
+- **Privacy First**: Everything is stored locally on your device. No cloud, no tracking, no account required.
 
 ## 🛠️ Tech Stack
 
-- **Language**: Kotlin
-- **UI Framework**: Jetpack Compose
+- **UI**: Jetpack Compose (Material 3)
 - **Database**: Room Persistence Library
-- **Dependency Injection**: Hilt
-- **Architecture**: MVVM (Model-View-ViewModel) with Clean Architecture principles
-- **Asynchronous Programming**: Kotlin Coroutines & Flow
+- **QR Engine**: ZXing (Zebra Crossing)
+- **Architecture**: MVVM with Clean Architecture principles
+- **Navigation**: Compose Navigation with Deep Link support
 
 ## 📥 Download
 Get the latest APK from [Releases](https://github.com/eyesoreee/kahon/releases).
