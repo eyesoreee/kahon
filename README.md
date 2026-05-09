@@ -28,7 +28,7 @@ Ever forgotten which box in the attic holds your holiday decorations, or which c
 
 1. **Clone the repository**:
    ```bash
-   git clone https://github.com/yourusername/kahon.git
+   git clone https://github.com/eyesoreee/kahon.git
    ```
 2. **Open in Android Studio**: Import the project as a Gradle project.
 3. **Build & Run**: Use the `app` configuration to deploy to an emulator or physical device.
