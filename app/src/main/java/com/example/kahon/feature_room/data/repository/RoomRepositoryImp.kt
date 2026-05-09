@@ -15,4 +15,7 @@ class RoomRepositoryImp @Inject constructor(
     override suspend fun deleteRoom(id: Long) = roomDao.deleteRoom(id)
     override suspend fun updateRoom(room: Room) = roomDao.updateRoom(room)
     override suspend fun doesRoomExist(roomName: String): Boolean = roomDao.doesRoomExist(roomName)
+    override suspend fun deleteAllRooms() = roomDao.deleteAllRooms()
+    override suspend fun getAllRoomsRaw(): List<Room> = roomDao.getAllRoomsRaw()
+    override suspend fun insertRooms(rooms: List<Room>) = roomDao.insertRooms(rooms)
 }

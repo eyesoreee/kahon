@@ -10,4 +10,7 @@ interface RoomRepository {
     suspend fun deleteRoom(id: Long)
     suspend fun updateRoom(room: Room)
     suspend fun doesRoomExist(roomName: String): Boolean
+    suspend fun deleteAllRooms()
+    suspend fun getAllRoomsRaw(): List<Room>
+    suspend fun insertRooms(rooms: List<Room>)
 }

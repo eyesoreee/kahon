@@ -2,6 +2,7 @@ package com.example.kahon.feature_item.data.repository
 
 import com.example.kahon.feature_item.data.local.Item
 import com.example.kahon.feature_item.data.local.ItemDao
+import com.example.kahon.feature_item.domain.model.SearchItem
 import com.example.kahon.feature_item.domain.repository.ItemRepository
 import kotlinx.coroutines.flow.Flow
 import javax.inject.Inject
@@ -11,6 +12,10 @@ class ItemRepositoryImp @Inject constructor(
 ) : ItemRepository {
     override fun getItems(storageId: Long): Flow<List<Item>> {
         return itemDao.getItems(storageId)
+    }
+
+    override fun searchItems(query: String): Flow<List<SearchItem>> {
+        return itemDao.searchItems(query)
     }
 
     override fun getAllCategories(): Flow<List<String>> {
@@ -36,4 +41,7 @@ class ItemRepositoryImp @Inject constructor(
     override suspend fun clearCategory(category: String) {
         itemDao.clearCategory(category)
     }
+
+    override suspend fun getAllItemsRaw(): List<Item> = itemDao.getAllItemsRaw()
+    override suspend fun insertItems(items: List<Item>) = itemDao.insertItems(items)
 }

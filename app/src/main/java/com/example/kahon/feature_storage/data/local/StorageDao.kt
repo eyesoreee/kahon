@@ -48,4 +48,9 @@ interface StorageDao {
         LIMIT 1
     """)
     suspend fun getStorageId(roomName: String, storageName: String): Long?
+    @Query("SELECT * FROM storage")
+    suspend fun getAllStoragesRaw(): List<Storage>
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertStorages(storages: List<Storage>)
 }

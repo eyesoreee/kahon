@@ -7,7 +7,9 @@ import androidx.room.ForeignKey
 import androidx.room.Index
 import androidx.room.PrimaryKey
 import com.example.kahon.feature_storage.data.local.Storage
+import kotlinx.serialization.Serializable
 
+@Serializable
 @Immutable
 @Entity(
     tableName = "item",

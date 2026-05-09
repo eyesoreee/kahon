@@ -11,4 +11,6 @@ interface StorageRepository {
     suspend fun updateStorage(storage: Storage)
     suspend fun doesStorageExist(roomName: String, storageName: String): Boolean
     suspend fun getStorageId(roomName: String, storageName: String): Long?
+    suspend fun getAllStoragesRaw(): List<Storage>
+    suspend fun insertStorages(storages: List<Storage>)
 }

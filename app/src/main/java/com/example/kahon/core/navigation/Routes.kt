@@ -16,3 +16,9 @@ data class ItemRoute(
     val roomName: String = "",
     val storageName: String = ""
 )
+
+@Serializable
+object SettingsRoute
+
+@Serializable
+object SearchRoute

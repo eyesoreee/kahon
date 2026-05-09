@@ -6,7 +6,9 @@ import androidx.room.ForeignKey
 import androidx.room.Index
 import androidx.room.PrimaryKey
 import com.example.kahon.feature_room.data.local.Room
+import kotlinx.serialization.Serializable
 
+@Serializable
 @Entity(
     tableName = "storage",
     foreignKeys = [

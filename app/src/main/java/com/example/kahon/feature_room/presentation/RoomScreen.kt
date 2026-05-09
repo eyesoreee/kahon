@@ -22,6 +22,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.input.rememberTextFieldState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material.icons.outlined.Settings
 import androidx.compose.material3.AlertDialog
@@ -69,13 +70,17 @@ import kotlinx.coroutines.launch
 @Composable
 fun RoomRoot(
     viewModel: RoomViewModel = hiltViewModel(),
-    onNavigateToStorage: (Long, String) -> Unit
+    onNavigateToStorage: (Long, String) -> Unit,
+    onNavigateToSettings: () -> Unit,
+    onNavigateToSearch: () -> Unit
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     RoomScreen(
         uiState = uiState,
         onAction = viewModel::onAction,
-        onRoomClick = onNavigateToStorage
+        onRoomClick = onNavigateToStorage,
+        onSettingsClick = onNavigateToSettings,
+        onSearchClick = onNavigateToSearch
     )
 }
 
@@ -86,6 +91,8 @@ fun RoomScreen(
     uiState: RoomUiState,
     onAction: (RoomAction) -> Unit,
     onRoomClick: (Long, String) -> Unit,
+    onSettingsClick: () -> Unit,
+    onSearchClick: () -> Unit,
 ) {
     val searchBarState = rememberSearchBarState()
     val textFieldState = rememberTextFieldState()
@@ -159,7 +166,9 @@ fun RoomScreen(
 
                     Text("Select Color", style = MaterialTheme.typography.labelLarge)
                     LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                        items(KahonCardPalettes, key = { it.gradientStart.value.toLong() }) { palette ->
+                        items(
+                            KahonCardPalettes,
+                            key = { it.gradientStart.value.toLong() }) { palette ->
                             val colorValue = palette.gradientStart.value.toLong()
                             Surface(
                                 onClick = { selectedColor = colorValue },
@@ -252,7 +261,13 @@ fun RoomScreen(
                 isDeleteWarningDialogOpen = false
                 selectedRoom = null
             },
-            icon = { Icon(Icons.Default.Warning, contentDescription = null, tint = MaterialTheme.colorScheme.error) },
+            icon = {
+                Icon(
+                    Icons.Default.Warning,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.error
+                )
+            },
             title = { Text(text = "Delete Room?") },
             text = {
                 Text(
@@ -324,7 +339,9 @@ fun RoomScreen(
 
                     Text("Select Color", style = MaterialTheme.typography.labelLarge)
                     LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                        items(KahonCardPalettes, key = { it.gradientStart.value.toLong() }) { palette ->
+                        items(
+                            KahonCardPalettes,
+                            key = { it.gradientStart.value.toLong() }) { palette ->
                             val colorValue = palette.gradientStart.value.toLong()
                             Surface(
                                 onClick = { selectedColor = colorValue },
@@ -401,7 +418,18 @@ fun RoomScreen(
                 },
                 actions = {
                     Surface(
-                        onClick = {},
+                        onClick = onSearchClick,
+                        shape = CircleShape,
+                        color = MaterialTheme.colorScheme.surfaceVariant,
+                        modifier = Modifier.size(40.dp)
+                    ) {
+                        Box(contentAlignment = Alignment.Center) {
+                            Icon(Icons.Default.Search, null, modifier = Modifier.size(20.dp))
+                        }
+                    }
+                    Spacer(Modifier.width(8.dp))
+                    Surface(
+                        onClick = onSettingsClick,
                         shape = CircleShape,
                         color = MaterialTheme.colorScheme.surfaceVariant,
                         modifier = Modifier.size(40.dp)

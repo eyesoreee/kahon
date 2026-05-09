@@ -35,4 +35,12 @@ interface RoomDao {
 
     @Query("SELECT EXISTS(SELECT 1 FROM room WHERE name = :roomName)")
     suspend fun doesRoomExist(roomName: String): Boolean
+
+    @Query("DELETE FROM room")
+    suspend fun deleteAllRooms()
+    @Query("SELECT * FROM room")
+    suspend fun getAllRoomsRaw(): List<Room>
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertRooms(rooms: List<Room>)
 }

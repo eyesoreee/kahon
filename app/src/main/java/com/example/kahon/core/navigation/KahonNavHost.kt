@@ -13,7 +13,9 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navDeepLink
 import com.example.kahon.feature_item.presentation.ItemRoot
+import com.example.kahon.feature_item.presentation.SearchScreen
 import com.example.kahon.feature_room.presentation.RoomRoot
+import com.example.kahon.feature_settings.presentation.SettingsScreen
 import com.example.kahon.feature_storage.presentation.StorageRoot
 
 @Composable
@@ -41,6 +43,12 @@ fun KahonNavHost(navController: NavHostController = rememberNavController()) {
                 RoomRoot(
                     onNavigateToStorage = { roomId, roomName ->
                         navController.navigate(StorageRoute(roomId.toString(), roomName))
+                    },
+                    onNavigateToSettings = {
+                        navController.navigate(SettingsRoute)
+                    },
+                    onNavigateToSearch = {
+                        navController.navigate(SearchRoute)
                     }
                 )
             }
@@ -66,6 +74,21 @@ fun KahonNavHost(navController: NavHostController = rememberNavController()) {
             ) {
                 ItemRoot(
                     onBackClick = { navController.popBackStack() }
+                )
+            }
+
+            composable<SettingsRoute> {
+                SettingsScreen(
+                    onBackClick = { navController.popBackStack() }
+                )
+            }
+
+            composable<SearchRoute> {
+                SearchScreen(
+                    onBackClick = { navController.popBackStack() },
+                    onNavigateToItems = { storageName, roomName ->
+                        navController.navigate(ItemRoute(roomName, storageName))
+                    }
                 )
             }
         }

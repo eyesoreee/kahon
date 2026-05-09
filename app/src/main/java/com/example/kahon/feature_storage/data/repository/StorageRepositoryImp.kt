@@ -33,4 +33,7 @@ class StorageRepositoryImp @Inject constructor(
     override suspend fun getStorageId(roomName: String, storageName: String): Long? {
         return storageDao.getStorageId(roomName, storageName)
     }
+
+    override suspend fun getAllStoragesRaw(): List<Storage> = storageDao.getAllStoragesRaw()
+    override suspend fun insertStorages(storages: List<Storage>) = storageDao.insertStorages(storages)
 }
