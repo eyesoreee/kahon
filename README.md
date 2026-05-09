@@ -24,6 +24,9 @@ Ever forgotten which box in the attic holds your holiday decorations, or which c
 - **Architecture**: MVVM (Model-View-ViewModel) with Clean Architecture principles
 - **Asynchronous Programming**: Kotlin Coroutines & Flow
 
+## 📥 Download
+Get the latest APK from [Releases](https://github.com/eyesoreee/kahon/releases).
+
 ## 🚀 Getting Started
 
 1. **Clone the repository**:
